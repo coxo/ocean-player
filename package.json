@@ -1,0 +1,58 @@
+{
+  "name": "ocean-player",
+  "version": "0.1.0",
+  "description": "video for html5 support flv m3u8",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Easy-Martin/lm-player.git"
+  },
+  "keywords": [
+    "video",
+    "flv",
+    "hls",
+    "player",
+    "m3u8"
+  ],
+  "author": "Easy-Martin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Easy-Martin/lm-player/issues"
+  },
+  "homepage": "https://github.com/Easy-Martin/lm-player",
+  "main": "umd/player.js",
+  "dependencies": {
+    "aes-js": "^3.1.2",
+    "flv.zv.js": "^2.2.0",
+    "hls.js": "^0.12.4",
+    "prop-types": "^15.7.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.2",
+    "@babel/plugin-proposal-class-properties": "^7.7.0",
+    "@babel/plugin-proposal-decorators": "^7.7.0",
+    "@babel/preset-env": "^7.7.1",
+    "@babel/preset-react": "^7.7.0",
+    "@rollup/plugin-babel": "^5.2.2",
+    "@rollup/plugin-commonjs": "^17.0.0",
+    "@rollup/plugin-node-resolve": "^11.1.0",
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.8.0",
+    "eslint-plugin-react": "^7.17.0",
+    "eslint-plugin-react-hooks": "^2.3.0",
+    "gh-pages": "^3.1.0",
+    "less": "^3.10.3",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "rollup": "^2.37.1",
+    "rollup-plugin-clear": "^2.0.7",
+    "rollup-plugin-eslint": "^7.0.0",
+    "rollup-plugin-postcss": "^4.0.0",
+    "postcss": "^8.2.4"
+  },
+  "scripts": {
+    "dev": "rollup --config rollup.config.umd.js --watch",
+    "es": "rollup --config rollup.config.es.js",
+    "umd": "rollup --config rollup.config.umd.js",
+    "deploy": "gh-pages -d demo"
+  }
+}
