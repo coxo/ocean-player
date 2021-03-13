@@ -14,6 +14,9 @@ function VideoMessage({ event, api }) {
       return '视频错误'
     }
     if (state.status === 'reload') {
+      if(!state.errorTimer){
+        return `视频加载错误，正在进行重连...`
+      }
       return `视频加载错误，正在进行重连第${state.errorTimer}次重连`
     }
   }, [state.errorTimer, state.status])
@@ -22,9 +25,9 @@ function VideoMessage({ event, api }) {
     const openLoading = () => setState(old => ({ ...old, loading: true }))
     const closeLoading = () => setState(old => ({ ...old, loading: false }))
     const errorReload = timer => setState(() => ({ status: 'reload', errorTimer: timer, loading: true }))
-    const reloadFail = () => setState(old => ({ ...old, status: 'fail' }))
-    const reloadSuccess = () => setState(old => ({ ...old, status: null }))
-    const reload = () => setState(old => ({ ...old, status: 'reload' }))
+    const reloadFail = () => setState(old => ({ ...old, status: 'fail' , loading: false}))
+    const reloadSuccess = () => setState(old => ({ ...old, status: null, loading: false }))
+    const reload = () => setState(old => ({ ...old, status: 'reload', loading: false }))
     const playEnd = () => (setState(old => ({ ...old, status: null, loading: false })), api.pause())
 
     event.addEventListener('loadstart', openLoading)

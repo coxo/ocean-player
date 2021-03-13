@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState,useMemo } from 'react';
 import VideoEvent from './event';
-import { getVideoType, createFlvPlayer, createHlsPlayer, tansCodingToUrl,getScreenRate } from './util';
+import { getVideoType, createFlvPlayer, createHlsPlayer, tansCodingToUrl, getScreenRate } from './util';
 import ContrallerBar from './contraller_bar';
 import ContrallerEvent from './event/contrallerEvent';
 import VideoMessage, { NoSource } from './message';
@@ -18,7 +18,6 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
   const playerRef = useRef(null);
   const rate = useMemo(() => getScreenRate(screenNum), [screenNum]);
   const [resolution, setResolution] = useState(rate);
-  
 
   function onToken(token){
     if(onVideoFn){
@@ -47,6 +46,8 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
     const playerObject = {
       playContainer: playContainerRef.current,
       video: playContainerRef.current.querySelector('video'),
+      resolution: resolution,
+      screenNum: screenNum
     };
     let isInit = false;
     const formartType = getVideoType(file);

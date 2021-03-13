@@ -4,7 +4,7 @@ import lcStore from "./service/lcStore";
 
 let index = 0
 export default class Api {
-  constructor({ video, playContainer, event, flv, hls }) {
+  constructor({ video, playContainer, event, flv, hls, resolution, screenNum }) {
     this.player = video
     this.playContainer = playContainer
     this.flv = flv
@@ -12,6 +12,10 @@ export default class Api {
     this.event = event
     this.scale = 1
     this.position = [0, 0]
+    // 分辨率
+    this.resolution = resolution
+    // 分屏数 其他模式为空
+    this.screenNum = screenNum || 0
   }
   /**
    * 播放器销毁后 动态跟新api下的flv，hls对象
@@ -92,7 +96,7 @@ export default class Api {
     }
   }
   success(notEmit){
-    !notEmit && this.event.emit(EventName.RELOAD)
+    !notEmit && this.event?.emit(EventName.RELOAD)
   }
   /**
    * 视频重载
@@ -260,6 +264,22 @@ export default class Api {
   getScale() {
     return this.scale
   }
+  /**
+   * 获取当前播放对象分辨率
+   * @returns 
+   */
+  getResolution(){
+    return this.resolution
+  }
+  
+  /**
+   * 获取当前分屏数
+   * @returns 
+   */
+  getCurrentScreen(){
+    return this.screenNum
+  }
+  
   setPosition(position, isAnimate) {
     this.position = position
     this.player.style.transition = isAnimate ? 'transform 0.3s' : 'unset'

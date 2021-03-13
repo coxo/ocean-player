@@ -15,28 +15,17 @@ import lcStore from "./service/url/lcStore";
 /**
  * 客户端插件模式，随机端口
  */
-export const LOCAL_PORT = ["15080", "15081", "15082", "15083", "15084", "15085"]
+export const LOCAL_PORT = ["15080", "15081", "15082", "15083", "15084", "15085", "15086", "15087", "15088", "15089"]
 
-/**
- * 获取视频分辨率
- */
- export function getVideoRatio() {
-  return {
-    '1': { value: '1920*1080', name: '超清', resolution:'1080p', bitrate:'2M'},
-    '2': { value: '1280*720', name: '高清', resolution:'720p', bitrate:'1M'},
-    '3': { value: '640*360', name: '标清', resolution:'360p', bitrate:'300K'},
-    '4': { value: '', name: '原始', resolution: '', bitrate:''},
-  }
-}
-
-export function findVideoBitrate(val) {
+export function findVideoAttribute(val, kv) {
   const ens = getVideoRatio()
   for(const key in ens){
     if(ens[key]['resolution'] == val){
-      return ens[key]['bitrate']
+      return ens[key][kv]
     }
   }
 }
+
 
 /**
  * 创建HLS对象
@@ -291,19 +280,31 @@ export function JSONP(url){
  * 生成UUID
  */
  export function genuuid() {
-  let s = [];
+  let tid = [];
   let hexDigits = '0123456789abcdef';
   for (let i = 0; i < 36; i++) {
-    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+    tid[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
   }
-  s[14] = '4';
-  s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);
-  s[8] = s[13] = s[18] = s[23] = '-';
 
-  let uuidStr = s.join('');
-  return uuidStr;
+  tid[14] = '4';
+  tid[19] = hexDigits.substr((tid[19] & 0x3) | 0x8, 1);
+  tid[8] = tid[13] = tid[18] = tid[23] = '-';
+
+  return tid.join('');
 }
 
+/**
+ * 获取视频分辨率
+ */
+ export function getVideoRatio() {
+  return {
+    '1': { value: '1920*1080', name: '超清', resolution:'1080p', bitrate:'2M',show: true},
+    '2': { value: '1280*720', name: '高清', resolution:'720p', bitrate:'2M',show: true},
+    '3': { value: '640*360', name: '标清', resolution:'360p', bitrate:'500K',show: true},
+    '4': { value: '640*480', name: '标清', resolution:'480p', bitrate:'1M',show: false},
+    '5': { value: '', name: '原始', resolution: '', bitrate:'',show: true},
+  }
+}
 
 /**
  * 根据分屏获取对应的分辨率
@@ -314,8 +315,10 @@ export function JSONP(url){
   // 1、4、6、8、9、10、13、16
   if(num < 4){
     return videoRatio['4'].resolution
-  }else if(num < 13 && num >= 4){
+  }else if(num < 9 && num >= 4){
     return videoRatio['2'].resolution
+  }else if(num < 13 && num >= 9){
+    return videoRatio['5'].resolution
   }else if(num <= 16 && num >= 13){
     return videoRatio['3'].resolution
   }else{
@@ -344,7 +347,7 @@ export function JSONP(url){
 
 
 export function unicodeToBase64(s){
-  return window.btoa(s)
+  return window?.btoa(s)
 }
 
 export function getLocalPort(){
@@ -366,7 +369,7 @@ export function tansCodingToUrl(url, resolution, onToken){
   // &resolution=<resolution>&bitrate=<bitrate>&key=<key>
   const url_info ={
       port: getLocalPort(),
-      pull_uri: unicodeToBase64(url).replaceAll('=','')
+      pull_uri: unicodeToBase64(url)?.replaceAll('=','')
   }
   // 分辨率，如果为空，为原始分辨率
   if(resolution){
@@ -382,9 +385,9 @@ export function tansCodingToUrl(url, resolution, onToken){
     param1 = '&resolution=' + resolution
 
     // 码率
-    param3 = '&bitrate=' + findVideoBitrate(resolution)
+    param3 = '&bitrate=' + findVideoAttribute(resolution,'bitrate')
 
-    console.log(param3)
+    console.log(param1+param3)
   }
 
   return lcStore.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3

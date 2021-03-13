@@ -62,6 +62,9 @@
         const [liveType, setLiveType] = useState('')
         const [historyType, setHistoryType] = useState('')
 
+        const sNumInputRef = useRef(null)
+        const [liveNum, setLiveNum] = useState(4)
+
         const onFileChange = function(e){
           setIsLive(false)
           setLiveType("flv")
@@ -124,11 +127,17 @@
                   <input type="file" name="" id="" onChange={onFileChange} />
                   <button>本地录像</button>
                 </span>
-                <button style={{ width: 60, height: 32 }} onClick={(e) => setFile(liveInputRef.current.value)}>
+                <button style={{ width: 60, height: 32 }} onClick={(e) => {
+                  // setFile(liveInputRef.current.value)
+                  setFile('http://192.168.66.221/staticResource/v2/video/live.flv/537067524?Authorization=eyJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25JZCI6IjEwMDEwMTAwMDQzNiIsImV4dCI6MTYxNTg3Njg1MDQyNywidWlkIjoiMTAxMDAwMDAwMjQzIiwidmFsaWRTdGF0ZSI6MTA0NDA2LCJyb2xlSWQiOlsxMDAwMDAxMTAyNzZdLCJ2YWxpZFRpbWUiOm51bGwsIm9wdENlbnRlcklkIjoiMTAwMTAwMDAwMjI3IiwidXNlclR5cGUiOjEwMDcwMiwiaWF0IjoxNjE1NjE3NjUwNDI3fQ.lyS1liW_Jrj1DZV7lq9n8ZZnfGtZKiXQbrCmZpRBf5Y')
+                  setLiveNum(sNumInputRef.current.value)
+                }}>
                   播放
                 </button>
-              </div>
-              <Player type={liveType} file={file} isLive={isLive} screenNum={1} onVideoFn={onVideoFn} />
+                <div/>
+                </div>
+              <input ref={sNumInputRef} style={{ width: 50, height: 32 }} type="text" placeholder="请输入分屏数" />
+              <Player type={liveType} file={file} isLive={isLive} screenNum={liveNum} onVideoFn={onVideoFn} />
             </div>
             <div style={{ width: 800, margin: '0 auto 40px auto' }}>
               <h2 style={{ marginBottom: 10 }}>HistoryPlayer适用多地址拼凑一个播放 特殊场景使用</h2>

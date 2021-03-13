@@ -108,45 +108,13 @@ const GL_CACHE = {
  * 客户端插件模式，随机端口
  */
 
-const LOCAL_PORT = ["15080", "15081", "15082", "15083", "15084", "15085"];
-/**
- * 获取视频分辨率
- */
-
-function getVideoRatio() {
-  return {
-    '1': {
-      value: '1920*1080',
-      name: '超清',
-      resolution: '1080p',
-      bitrate: '2M'
-    },
-    '2': {
-      value: '1280*720',
-      name: '高清',
-      resolution: '720p',
-      bitrate: '1M'
-    },
-    '3': {
-      value: '640*360',
-      name: '标清',
-      resolution: '360p',
-      bitrate: '300K'
-    },
-    '4': {
-      value: '',
-      name: '原始',
-      resolution: '',
-      bitrate: ''
-    }
-  };
-}
-function findVideoBitrate(val) {
+const LOCAL_PORT = ["15080", "15081", "15082", "15083", "15084", "15085", "15086", "15087", "15088", "15089"];
+function findVideoAttribute(val, kv) {
   const ens = getVideoRatio();
 
   for (const key in ens) {
     if (ens[key]['resolution'] == val) {
-      return ens[key]['bitrate'];
+      return ens[key][kv];
     }
   }
 }
@@ -399,18 +367,60 @@ function JSONP(url) {
  */
 
 function genuuid() {
-  let s = [];
+  let tid = [];
   let hexDigits = '0123456789abcdef';
 
   for (let i = 0; i < 36; i++) {
-    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+    tid[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
   }
 
-  s[14] = '4';
-  s[19] = hexDigits.substr(s[19] & 0x3 | 0x8, 1);
-  s[8] = s[13] = s[18] = s[23] = '-';
-  let uuidStr = s.join('');
-  return uuidStr;
+  tid[14] = '4';
+  tid[19] = hexDigits.substr(tid[19] & 0x3 | 0x8, 1);
+  tid[8] = tid[13] = tid[18] = tid[23] = '-';
+  return tid.join('');
+}
+/**
+ * 获取视频分辨率
+ */
+
+function getVideoRatio() {
+  return {
+    '1': {
+      value: '1920*1080',
+      name: '超清',
+      resolution: '1080p',
+      bitrate: '2M',
+      show: true
+    },
+    '2': {
+      value: '1280*720',
+      name: '高清',
+      resolution: '720p',
+      bitrate: '2M',
+      show: true
+    },
+    '3': {
+      value: '640*360',
+      name: '标清',
+      resolution: '360p',
+      bitrate: '500K',
+      show: true
+    },
+    '4': {
+      value: '640*480',
+      name: '标清',
+      resolution: '480p',
+      bitrate: '1M',
+      show: false
+    },
+    '5': {
+      value: '',
+      name: '原始',
+      resolution: '',
+      bitrate: '',
+      show: true
+    }
+  };
 }
 /**
  * 根据分屏获取对应的分辨率
@@ -422,8 +432,10 @@ function getScreenRate(num) {
 
   if (num < 4) {
     return videoRatio['4'].resolution;
-  } else if (num < 13 && num >= 4) {
+  } else if (num < 9 && num >= 4) {
     return videoRatio['2'].resolution;
+  } else if (num < 13 && num >= 9) {
+    return videoRatio['5'].resolution;
   } else if (num <= 16 && num >= 13) {
     return videoRatio['3'].resolution;
   } else {
@@ -449,12 +461,16 @@ function getGlobalCache(key) {
   return playerOptions ? playerOptions[key] : '';
 }
 function unicodeToBase64(s) {
-  return window.btoa(s);
+  var _window;
+
+  return (_window = window) === null || _window === void 0 ? void 0 : _window.btoa(s);
 }
 function getLocalPort() {
   return LOCAL_PORT[Math.floor(Math.random() * LOCAL_PORT.length)];
 }
 function tansCodingToUrl(url, resolution, onToken) {
+  var _unicodeToBase;
+
   let param1 = '';
   let param2 = '';
   let param3 = '';
@@ -466,7 +482,7 @@ function tansCodingToUrl(url, resolution, onToken) {
 
   const url_info = {
     port: getLocalPort(),
-    pull_uri: unicodeToBase64(url).replaceAll('=', '')
+    pull_uri: (_unicodeToBase = unicodeToBase64(url)) === null || _unicodeToBase === void 0 ? void 0 : _unicodeToBase.replaceAll('=', '')
   }; // 分辨率，如果为空，为原始分辨率
 
   if (resolution) {
@@ -480,8 +496,8 @@ function tansCodingToUrl(url, resolution, onToken) {
   if (resolution) {
     param1 = '&resolution=' + resolution; // 码率
 
-    param3 = '&bitrate=' + findVideoBitrate(resolution);
-    console.log(param3);
+    param3 = '&bitrate=' + findVideoAttribute(resolution, 'bitrate');
+    console.log(param1 + param3);
   }
 
   return lcStore$1.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3;
@@ -903,9 +919,9 @@ function RightBar({
 }) {
   const [dep, setDep] = useState(Date.now()); // 获取视频分辨率
 
-  const ratioValue = getVideoRatio(); // 默认高清3，544
+  const ratioValue = getVideoRatio(); // 默认
 
-  const [viewText, setViewText] = useState(ratioValue[2].name);
+  const [viewText, setViewText] = useState(findVideoAttribute(api.getResolution(), 'name'));
   const isSwithRate = getGlobalCache(GL_CACHE.SR) || false;
   useEffect(() => {
     const update = () => setDep(Date.now());
@@ -915,7 +931,19 @@ function RightBar({
   }, []);
   const isfull = useMemo(() => isFullscreen(playContainer), [dep, playContainer]);
   const fullscreen = useCallback(() => {
-    !isFullscreen(playContainer) ? api.requestFullScreen() : api.cancelFullScreen();
+    const isFullScreen = !isFullscreen(playContainer);
+
+    if (isFullScreen) {
+      api.requestFullScreen();
+      switchResolution('');
+      setViewText(findVideoAttribute('', 'name'));
+    } else {
+      api.cancelFullScreen();
+      switchResolution(getScreenRate(api.getCurrentScreen()));
+      setViewText(findVideoAttribute(getScreenRate(api.getCurrentScreen()), 'name'));
+    } // 设置对应的分辨率名称
+
+
     setDep(Date.now());
   }, [api, playContainer]);
   const setScale = useCallback((...args) => {
@@ -928,8 +956,7 @@ function RightBar({
     }
   }, [api, playContainer]);
   const setRatio = useCallback((...args) => {
-    setViewText(ratioValue[args].name); // api.exeRatioCommand(ratioValue[args].resolution)
-
+    setViewText(ratioValue[args].name);
     switchResolution(ratioValue[args].resolution);
   }, [api]);
   return /*#__PURE__*/React.createElement("div", {
@@ -952,7 +979,7 @@ function RightBar({
     class: "ratioMenu-main"
   }, viewText), /*#__PURE__*/React.createElement("ul", {
     class: "ratioMenu-level"
-  }, Object.keys(ratioValue).map(item => /*#__PURE__*/React.createElement("li", {
+  }, Object.keys(ratioValue).map(item => ratioValue[item].show && /*#__PURE__*/React.createElement("li", {
     class: "ratioMenu-level-1",
     onClick: () => setRatio(item)
   }, ratioValue[item].name)))), snapshot && /*#__PURE__*/React.createElement(Bar, null, /*#__PURE__*/React.createElement(IconFont, {
@@ -1109,6 +1136,10 @@ function VideoMessage({
     }
 
     if (state.status === 'reload') {
+      if (!state.errorTimer) {
+        return `视频加载错误，正在进行重连...`;
+      }
+
       return `视频加载错误，正在进行重连第${state.errorTimer}次重连`;
     }
   }, [state.errorTimer, state.status]);
@@ -1128,15 +1159,18 @@ function VideoMessage({
     }));
 
     const reloadFail = () => setState(old => ({ ...old,
-      status: 'fail'
+      status: 'fail',
+      loading: false
     }));
 
     const reloadSuccess = () => setState(old => ({ ...old,
-      status: null
+      status: null,
+      loading: false
     }));
 
     const reload = () => setState(old => ({ ...old,
-      status: 'reload'
+      status: 'reload',
+      loading: false
     }));
 
     const playEnd = () => (setState(old => ({ ...old,
@@ -1293,6 +1327,10 @@ function ErrorEvent({
   useEffect(() => {
     const errorHandle = (...args) => {
       if (args[2] && args[2].msg && args[2].msg.includes('Unsupported audio')) {
+        return;
+      }
+
+      if (args[1] && args[1].details && (args[1].details.includes("bufferStalledError") || args[1].details.includes("bufferNudgeOnStall") || args[1].details.includes("bufferSeekOverHole") || args[1].details.includes("bufferAddCodecError"))) {
         return;
       }
 
@@ -1476,7 +1514,9 @@ class Api {
     playContainer,
     event,
     flv,
-    hls
+    hls,
+    resolution,
+    screenNum
   }) {
     this.player = video;
     this.playContainer = playContainer;
@@ -1484,7 +1524,11 @@ class Api {
     this.hls = hls;
     this.event = event;
     this.scale = 1;
-    this.position = [0, 0];
+    this.position = [0, 0]; // 分辨率
+
+    this.resolution = resolution; // 分屏数 其他模式为空
+
+    this.screenNum = screenNum || 0;
   }
   /**
    * 播放器销毁后 动态跟新api下的flv，hls对象
@@ -1585,7 +1629,9 @@ class Api {
   }
 
   success(notEmit) {
-    !notEmit && this.event.emit(EventName.RELOAD);
+    var _this$event;
+
+    !notEmit && ((_this$event = this.event) === null || _this$event === void 0 ? void 0 : _this$event.emit(EventName.RELOAD));
   }
   /**
    * 视频重载
@@ -1795,6 +1841,24 @@ class Api {
   getScale() {
     return this.scale;
   }
+  /**
+   * 获取当前播放对象分辨率
+   * @returns 
+   */
+
+
+  getResolution() {
+    return this.resolution;
+  }
+  /**
+   * 获取当前分屏数
+   * @returns 
+   */
+
+
+  getCurrentScreen() {
+    return this.screenNum;
+  }
 
   setPosition(position, isAnimate) {
     this.position = position;
@@ -1976,7 +2040,9 @@ function SinglePlayer({
 
     const playerObject = {
       playContainer: playContainerRef.current,
-      video: playContainerRef.current.querySelector('video')
+      video: playContainerRef.current.querySelector('video'),
+      resolution: resolution,
+      screenNum: screenNum
     };
     let isInit = false;
     const formartType = getVideoType(file);

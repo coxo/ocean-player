@@ -1,16 +1,16 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import IconFont from '../iconfont'
 import Bar from './bar'
-import { isFullscreen, fullScreenListener, computedBound, getVideoRatio, getGlobalCache, GL_CACHE } from '../util'
+import { isFullscreen, fullScreenListener, computedBound, getVideoRatio, findVideoAttribute, getScreenRate, getGlobalCache, GL_CACHE } from '../util'
 import PropTypes from 'prop-types'
 
 function RightBar({ playContainer, api, scale, snapshot, rightExtContents, rightMidExtContents, isLive, switchResolution}) {
   const [dep, setDep] = useState(Date.now())
 
-    // 获取视频分辨率
+  // 获取视频分辨率
   const ratioValue = getVideoRatio()
-      // 默认高清3，544
-  const [viewText, setViewText] = useState(ratioValue[2].name);
+  // 默认
+  const [viewText, setViewText] = useState(findVideoAttribute(api.getResolution(),'name'));
 
   const isSwithRate = getGlobalCache(GL_CACHE.SR) || false
 
@@ -24,7 +24,19 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
   const isfull = useMemo(() => isFullscreen(playContainer), [dep, playContainer])
 
   const fullscreen = useCallback(() => {
-    !isFullscreen(playContainer) ? api.requestFullScreen() : api.cancelFullScreen()
+    const isFullScreen = !isFullscreen(playContainer)
+    
+    if(isFullScreen){
+      api.requestFullScreen()
+      switchResolution('')
+      setViewText(findVideoAttribute('','name'))
+    }else{
+      api.cancelFullScreen()
+      switchResolution(getScreenRate(api.getCurrentScreen()))
+      setViewText(findVideoAttribute(getScreenRate(api.getCurrentScreen()),'name'))
+    }
+
+    // 设置对应的分辨率名称
     setDep(Date.now())
   }, [api, playContainer])
 
@@ -43,7 +55,6 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
   const setRatio = useCallback(
     (...args) => {
       setViewText(ratioValue[args].name)
-      // api.exeRatioCommand(ratioValue[args].resolution)
       switchResolution(ratioValue[args].resolution)
     },
     [api]
@@ -72,7 +83,7 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
             <ul class="ratioMenu-level">
               {
                 Object.keys(ratioValue).map((item)=>(
-                  <li class="ratioMenu-level-1" onClick={() => setRatio(item)}>{ratioValue[item].name}</li>
+                  ratioValue[item].show && (<li class="ratioMenu-level-1" onClick={() => setRatio(item)}>{ratioValue[item].name}</li>) 
                 ))
               }
             </ul>
