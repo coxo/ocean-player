@@ -458,15 +458,15 @@
     const videoRatio = getVideoRatio(); // 1、4、6、8、9、10、13、16
 
     if (num < 4) {
-      return videoRatio['4'].resolution;
+      return videoRatio['5'].resolution;
     } else if (num < 9 && num >= 4) {
       return videoRatio['2'].resolution;
     } else if (num < 13 && num >= 9) {
-      return videoRatio['5'].resolution;
+      return videoRatio['4'].resolution;
     } else if (num <= 16 && num >= 13) {
       return videoRatio['3'].resolution;
     } else {
-      return videoRatio['1'].resolution;
+      return videoRatio['5'].resolution;
     }
   }
   /**
