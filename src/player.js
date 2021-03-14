@@ -53,11 +53,19 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
     const formartType = getVideoType(file);
     if (formartType === 'flv' || type === 'flv') {
       isInit = true;
-      playerObject.flv = createFlvPlayer(playerObject.video, { ...props, file: tansCodingToUrl(file, resolution, onToken ) });
+      try{
+        playerObject.flv = createFlvPlayer(playerObject.video, { ...props, file: tansCodingToUrl(file, resolution, onToken ) });
+      }catch(e) {
+        console.error(e)
+      }
     }
     if (formartType === 'm3u8' || type === 'hls') {
       isInit = true;
-      playerObject.hls = createHlsPlayer(playerObject.video, file);
+      try{
+        playerObject.hls = createHlsPlayer(playerObject.video, file);
+      }catch(e) {
+        console.error(e)
+      }
     }
     if (!isInit && (!['flv', 'm3u8'].includes(formartType) || type === 'native')) {
       playerObject.video.src = file;
