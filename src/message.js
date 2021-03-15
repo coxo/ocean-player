@@ -22,17 +22,20 @@ function VideoMessage({ event, api }) {
   }, [state.errorTimer, state.status])
 
   useEffect(() => {
-    const openLoading = () => setState(old => ({ ...old, loading: true }))
+    const openStartLoading = () => setState(old =>({ ...old, loading: true }))
+    const openWaitLoading = () => setState(old =>({ ...old}))
+    const openSeekLoading = () => setState(old =>({ ...old, loading: true }))
+
     const closeLoading = () => setState(old => ({ ...old, loading: false }))
     const errorReload = timer => setState(() => ({ status: 'reload', errorTimer: timer, loading: true }))
     const reloadFail = () => setState(old => ({ ...old, status: 'fail' , loading: false}))
     const reloadSuccess = () => setState(old => ({ ...old, status: null, loading: false }))
-    const reload = () => setState(old => ({ ...old, status: 'reload', loading: false }))
+    const reload = () => setState(old => ({ ...old, status: 'reload', loading: true }))
     const playEnd = () => (setState(old => ({ ...old, status: null, loading: false })), api.pause())
 
-    event.addEventListener('loadstart', openLoading)
-    event.addEventListener('waiting', openLoading)
-    event.addEventListener('seeking', openLoading)
+    event.addEventListener('loadstart', openStartLoading)
+    event.addEventListener('waiting', openWaitLoading)
+    event.addEventListener('seeking', openSeekLoading)
     event.addEventListener('loadeddata', closeLoading)
     event.addEventListener('canplay', closeLoading)
     event.on(EventName.ERROR_RELOAD, errorReload)
@@ -43,9 +46,9 @@ function VideoMessage({ event, api }) {
     event.on(EventName.CLEAR_ERROR_TIMER, reloadSuccess)
 
     return () => {
-      event.removeEventListener('loadstart', openLoading)
-      event.removeEventListener('waiting', openLoading)
-      event.removeEventListener('seeking', openLoading)
+      event.removeEventListener('loadstart', openStartLoading)
+      event.removeEventListener('waiting', openWaitLoading)
+      event.removeEventListener('seeking', openSeekLoading)
       event.removeEventListener('loadeddata', closeLoading)
       event.removeEventListener('canplay', closeLoading)
       event.off(EventName.ERROR_RELOAD, errorReload)
