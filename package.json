@@ -1,6 +1,6 @@
 {
   "name": "ocean-player",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "video for html5 support flv m3u8",
   "repository": {
     "type": "git",
@@ -19,7 +19,7 @@
     "url": "https://github.com/Easy-Martin/lm-player/issues"
   },
   "homepage": "https://github.com/Easy-Martin/lm-player",
-  "main": "umd/player.js",
+  "main": "es/player.js",
   "dependencies": {
     "aes-js": "^3.1.2",
     "flv.zv.js": "^2.2.0",

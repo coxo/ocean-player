@@ -1658,13 +1658,15 @@
     }
 
     destroy() {
+      var _this$flv;
+
       this.player.removeAttribute('src');
-      this.flv.pause();
+      (_this$flv = this.flv) === null || _this$flv === void 0 ? void 0 : _this$flv.pause();
       this.unload();
-      this.flv.detachMediaElement();
 
       if (this.flv) {
         index++;
+        this.flv.detachMediaElement && this.flv.detachMediaElement();
         this.flv.destroy();
       }
 

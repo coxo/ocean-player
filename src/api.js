@@ -53,11 +53,11 @@ export default class Api {
   }
   destroy() {
     this.player.removeAttribute('src')
-    this.flv.pause()
+    this.flv?.pause()
     this.unload()
-    this.flv.detachMediaElement()
     if (this.flv) {
       index++
+      this.flv.detachMediaElement && this.flv.detachMediaElement()
       this.flv.destroy()
     }
     if (this.hls) {
