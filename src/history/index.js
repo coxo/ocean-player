@@ -10,22 +10,26 @@ import VideoEvent from '../event';
 import PlayEnd from './play_end';
 import EventName from '../event/eventName';
 import ContrallerEvent from '../event/contrallerEvent';
-import { getVideoType, createFlvPlayer, createHlsPlayer } from '../util';
+import { getVideoType, createFlvPlayer, createHlsPlayer, tansCodingToUrl, getScreenRate  } from '../util';
 import { computedTimeAndIndex } from './utils';
 
-function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, ...props }) {
+function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum, ...props }) {
   const playContainerRef = useRef(null);
   const [playerObj, setPlayerObj] = useState(null);
   const playerRef = useRef(null);
   const [playStatus, setPlayStatus] = useState(() => computedTimeAndIndex(historyList, defaultTime));
   const playIndex = useMemo(() => playStatus[0], [playStatus]);
   const defaultSeekTime = useMemo(() => playStatus[1], [playStatus]);
+
+  const rate = useMemo(() => getScreenRate(screenNum), [screenNum]);
+  const [resolution, setResolution] = useState(rate);
+
   const file = useMemo(() => {
     let url;
     try {
       url = historyList.fragments[playIndex].file;
     } catch (e) {
-      console.warn('未找打播放地址！', historyList);
+      console.warn('未找到播放地址！', historyList);
     }
     return url;
   }, [historyList, playIndex]);
@@ -104,12 +108,14 @@ function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, mu
     const playerObject = {
       playContainer: playContainerRef.current,
       video: playContainerRef.current.querySelector('video'),
+      resolution: resolution,
+      screenNum: screenNum,
     };
     let isInit = false;
     const formartType = getVideoType(file);
     if (formartType === 'flv' || type === 'flv') {
       isInit = true;
-      playerObject.flv = createFlvPlayer(playerObject.video, { ...props, file });
+      playerObject.flv = createFlvPlayer(playerObject.video, { ...props,  file: tansCodingToUrl(file, resolution) });
     }
     if (formartType === 'm3u8' || type === 'hls') {
       isInit = true;

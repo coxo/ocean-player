@@ -1225,7 +1225,14 @@
       }
     }, [state.errorTimer, state.status]);
     React.useEffect(() => {
-      const openLoading = () => setState(old => ({ ...old,
+      const openStartLoading = () => setState(old => ({ ...old,
+        loading: true
+      }));
+
+      const openWaitLoading = () => setState(old => ({ ...old
+      }));
+
+      const openSeekLoading = () => setState(old => ({ ...old,
         loading: true
       }));
 
@@ -1251,7 +1258,7 @@
 
       const reload = () => setState(old => ({ ...old,
         status: 'reload',
-        loading: false
+        loading: true
       }));
 
       const playEnd = () => (setState(old => ({ ...old,
@@ -1259,9 +1266,9 @@
         loading: false
       })), api.pause());
 
-      event.addEventListener('loadstart', openLoading);
-      event.addEventListener('waiting', openLoading);
-      event.addEventListener('seeking', openLoading);
+      event.addEventListener('loadstart', openStartLoading);
+      event.addEventListener('waiting', openWaitLoading);
+      event.addEventListener('seeking', openSeekLoading);
       event.addEventListener('loadeddata', closeLoading);
       event.addEventListener('canplay', closeLoading);
       event.on(EventName.ERROR_RELOAD, errorReload);
@@ -1271,9 +1278,9 @@
       event.on(EventName.HISTORY_PLAY_END, playEnd);
       event.on(EventName.CLEAR_ERROR_TIMER, reloadSuccess);
       return () => {
-        event.removeEventListener('loadstart', openLoading);
-        event.removeEventListener('waiting', openLoading);
-        event.removeEventListener('seeking', openLoading);
+        event.removeEventListener('loadstart', openStartLoading);
+        event.removeEventListener('waiting', openWaitLoading);
+        event.removeEventListener('seeking', openSeekLoading);
         event.removeEventListener('loadeddata', closeLoading);
         event.removeEventListener('canplay', closeLoading);
         event.off(EventName.ERROR_RELOAD, errorReload);
@@ -2513,6 +2520,7 @@
     preload,
     children,
     onInitPlayer,
+    screenNum,
     ...props
   }) {
     const playContainerRef = React.useRef(null);
@@ -2521,13 +2529,15 @@
     const [playStatus, setPlayStatus] = React.useState(() => computedTimeAndIndex(historyList, defaultTime));
     const playIndex = React.useMemo(() => playStatus[0], [playStatus]);
     const defaultSeekTime = React.useMemo(() => playStatus[1], [playStatus]);
+    const rate = React.useMemo(() => getScreenRate(screenNum), [screenNum]);
+    const [resolution, setResolution] = React.useState(rate);
     const file = React.useMemo(() => {
       let url;
 
       try {
         url = historyList.fragments[playIndex].file;
       } catch (e) {
-        console.warn('未找打播放地址！', historyList);
+        console.warn('未找到播放地址！', historyList);
       }
 
       return url;
@@ -2597,7 +2607,9 @@
 
       const playerObject = {
         playContainer: playContainerRef.current,
-        video: playContainerRef.current.querySelector('video')
+        video: playContainerRef.current.querySelector('video'),
+        resolution: resolution,
+        screenNum: screenNum
       };
       let isInit = false;
       const formartType = getVideoType(file);
@@ -2605,7 +2617,7 @@
       if (formartType === 'flv' || type === 'flv') {
         isInit = true;
         playerObject.flv = createFlvPlayer(playerObject.video, { ...props,
-          file
+          file: tansCodingToUrl(file, resolution)
         });
       }
 

@@ -1198,7 +1198,14 @@ function VideoMessage({
     }
   }, [state.errorTimer, state.status]);
   useEffect(() => {
-    const openLoading = () => setState(old => ({ ...old,
+    const openStartLoading = () => setState(old => ({ ...old,
+      loading: true
+    }));
+
+    const openWaitLoading = () => setState(old => ({ ...old
+    }));
+
+    const openSeekLoading = () => setState(old => ({ ...old,
       loading: true
     }));
 
@@ -1224,7 +1231,7 @@ function VideoMessage({
 
     const reload = () => setState(old => ({ ...old,
       status: 'reload',
-      loading: false
+      loading: true
     }));
 
     const playEnd = () => (setState(old => ({ ...old,
@@ -1232,9 +1239,9 @@ function VideoMessage({
       loading: false
     })), api.pause());
 
-    event.addEventListener('loadstart', openLoading);
-    event.addEventListener('waiting', openLoading);
-    event.addEventListener('seeking', openLoading);
+    event.addEventListener('loadstart', openStartLoading);
+    event.addEventListener('waiting', openWaitLoading);
+    event.addEventListener('seeking', openSeekLoading);
     event.addEventListener('loadeddata', closeLoading);
     event.addEventListener('canplay', closeLoading);
     event.on(EventName.ERROR_RELOAD, errorReload);
@@ -1244,9 +1251,9 @@ function VideoMessage({
     event.on(EventName.HISTORY_PLAY_END, playEnd);
     event.on(EventName.CLEAR_ERROR_TIMER, reloadSuccess);
     return () => {
-      event.removeEventListener('loadstart', openLoading);
-      event.removeEventListener('waiting', openLoading);
-      event.removeEventListener('seeking', openLoading);
+      event.removeEventListener('loadstart', openStartLoading);
+      event.removeEventListener('waiting', openWaitLoading);
+      event.removeEventListener('seeking', openSeekLoading);
       event.removeEventListener('loadeddata', closeLoading);
       event.removeEventListener('canplay', closeLoading);
       event.off(EventName.ERROR_RELOAD, errorReload);
@@ -2486,6 +2493,7 @@ function HistoryPlayer({
   preload,
   children,
   onInitPlayer,
+  screenNum,
   ...props
 }) {
   const playContainerRef = useRef(null);
@@ -2494,13 +2502,15 @@ function HistoryPlayer({
   const [playStatus, setPlayStatus] = useState(() => computedTimeAndIndex(historyList, defaultTime));
   const playIndex = useMemo(() => playStatus[0], [playStatus]);
   const defaultSeekTime = useMemo(() => playStatus[1], [playStatus]);
+  const rate = useMemo(() => getScreenRate(screenNum), [screenNum]);
+  const [resolution, setResolution] = useState(rate);
   const file = useMemo(() => {
     let url;
 
     try {
       url = historyList.fragments[playIndex].file;
     } catch (e) {
-      console.warn('未找打播放地址！', historyList);
+      console.warn('未找到播放地址！', historyList);
     }
 
     return url;
@@ -2570,7 +2580,9 @@ function HistoryPlayer({
 
     const playerObject = {
       playContainer: playContainerRef.current,
-      video: playContainerRef.current.querySelector('video')
+      video: playContainerRef.current.querySelector('video'),
+      resolution: resolution,
+      screenNum: screenNum
     };
     let isInit = false;
     const formartType = getVideoType(file);
@@ -2578,7 +2590,7 @@ function HistoryPlayer({
     if (formartType === 'flv' || type === 'flv') {
       isInit = true;
       playerObject.flv = createFlvPlayer(playerObject.video, { ...props,
-        file
+        file: tansCodingToUrl(file, resolution)
       });
     }
 
