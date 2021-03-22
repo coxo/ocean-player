@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState,useMemo } from 'react';
 import VideoEvent from './event';
-import { getVideoType, createFlvPlayer, createHlsPlayer, tansCodingToUrl, getScreenRate } from './util';
+import { getVideoType, createFlvPlayer, createHlsPlayer,detectorPlayeMode,tansCodingToUrl, getScreenRate, installState } from './util';
 import ContrallerBar from './contraller_bar';
 import ContrallerEvent from './event/contrallerEvent';
 import VideoMessage, { NoSource } from './message';
@@ -12,12 +12,19 @@ import LiveHeart from './live_heart';
 import PropTypes from 'prop-types';
 import './style/index.less';
 
-function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum, onVideoFn, ...props }) {
+function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum, onVideoFn,deviceInfo, ...props }) {
   const playContainerRef = useRef(null);
   const [playerObj, setPlayerObj] = useState(null);
   const playerRef = useRef(null);
+  // 分屏数 分辨率
   const rate = useMemo(() => getScreenRate(screenNum), [screenNum]);
   const [resolution, setResolution] = useState(rate);
+
+  const [install, setInstall] = useState(false);
+
+  installState(function(){
+    setInstall(true)
+  })
 
   function onToken(token){
     if(onVideoFn){
@@ -47,14 +54,16 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
       playContainer: playContainerRef.current,
       video: playContainerRef.current.querySelector('video'),
       resolution: resolution,
-      screenNum: screenNum
+      screenNum: screenNum,
+      playeMode : detectorPlayeMode(),
+      deviceInfo: deviceInfo,
     };
     let isInit = false;
     const formartType = getVideoType(file);
     if (formartType === 'flv' || type === 'flv') {
       isInit = true;
       try{
-        playerObject.flv = createFlvPlayer(playerObject.video, { ...props, file: tansCodingToUrl(file, resolution, onToken ) });
+        playerObject.flv = createFlvPlayer(playerObject.video, { ...props, file: tansCodingToUrl({file, resolution, deviceInfo}, onToken) });
       }catch(e) {
         console.error(e)
       }
@@ -94,6 +103,7 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
         playerObj={playerObj}
         isLive={props.isLive}
         key={file}
+        install={install}
         hideContrallerBar={props.hideContrallerBar}
         errorReloadTimer={props.errorReloadTimer}
         scale={props.scale}
@@ -125,9 +135,10 @@ function VideoTools({
   rightExtContents,
   rightMidExtContents,
   errorReloadTimer,
+  install,
 }) {
   if (!playerObj) {
-    return <NoSource />;
+    return <NoSource install={install}/>;
   }
   return (
     <>

@@ -115,7 +115,7 @@ function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, mu
     const formartType = getVideoType(file);
     if (formartType === 'flv' || type === 'flv') {
       isInit = true;
-      playerObject.flv = createFlvPlayer(playerObject.video, { ...props,  file: tansCodingToUrl(file, resolution) });
+      playerObject.flv = createFlvPlayer(playerObject.video, { ...props,  file: tansCodingToUrl({file, resolution}) });
     }
     if (formartType === 'm3u8' || type === 'hls') {
       isInit = true;

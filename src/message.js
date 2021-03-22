@@ -68,14 +68,21 @@ function VideoMessage({ event, api }) {
         className={`${loading && status !== 'fail' ? 'lm-player-loading-animation' : status === 'fail' ? 'lm-player-loadfail' : ''} lm-player-loading-icon`}
       />
       <span className="lm-player-message">{message}</span>
+      <div>
+    </div>
     </div>
   )
 }
 
-export const NoSource = () => {
+export const NoSource = ({install}) => {
+  const isPlus = sessionStorage.getItem('_TEMP_PLAY_CODE')
+  // const _TEMP_PLAY_PATH = sessionStorage.getItem('_TEMP_PLAY_PATH')
+  const _TEMP_PLAY_PATH = (window.BSConfig?.playerDownloadUrl) || localStorage.getItem('ZVPlayerUrl')
   return (
     <div className="lm-player-message-mask lm-player-mask-loading-animation">
       <IconFont style={{ fontSize: 80 }} type="lm-player-PlaySource" title="请选择视频源"></IconFont>
+      {(!isPlus)  && (<a className="lm-player-message" target="_blank" href={_TEMP_PLAY_PATH} style={{ pointerEvents: 'all',textDecoration: 'none' }} download="ZVPlayer.exe" rel="noopener noreferrer">下载播放器</a>)}
+      {(isPlus == '10001')  && (<a className="lm-player-message" target="_blank" href={_TEMP_PLAY_PATH} style={{ pointerEvents: 'all',textDecoration: 'none' }} download="ZVPlayer.exe" rel="noopener noreferrer">{'安装版本过低，请升级播放器版本' + sessionStorage.getItem('_TEMP_PLAY_VERSION')}</a>)}
     </div>
   )
 }

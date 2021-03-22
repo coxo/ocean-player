@@ -107,20 +107,551 @@
 
   }
 
-  const hostUrl = 'http://127.0.0.1';
+  /* global module,define,console */
+
+  /**
+   * Extend Object
+   *
+   * @param {object} dist
+   * @param {object} source
+   * @return {object} dist
+   */
+  function extend(dist, source) {
+    for (var key in source) {
+      if (source.hasOwnProperty(key)) {
+        dist[key] = source[key];
+      }
+    }
+
+    return dist;
+  }
+  /**
+   * Query url & strings build
+   *
+   * @param  {string} url  request url
+   * @param  {object} data request datas
+   * @return {object}
+   */
+
+
+  function urlBuild(url, data) {
+    if (typeof data === "object") {
+      var temp = [];
+
+      for (var i in data) {
+        temp.push(i + "=" + encodeURIComponent(data[i]));
+      }
+
+      data = temp.join("&");
+    }
+
+    url = url + (url.indexOf("?") < 0 ? data === "" || !data ? "" : "?" : data === "" || !data ? "" : "&") + data;
+    return {
+      url: url,
+      data: data
+    };
+  }
+
+  var httpx = {
+    version: "0.3.1",
+    useXDR: false,
+    logPrefix: "HTTPx.js:",
+
+    /**
+     * Create XHR object
+     *
+     * @param  {boolean} [xdomain=false]
+     * @return {object}  xhr              XMLHttpRequest or XDomainRequest
+     */
+    xhr: function (xdomain) {
+      if (typeof xdomain === "undefined") {
+        xdomain = false;
+      }
+
+      try {
+        var xhr = xdomain ? new XDomainRequest() : new XMLHttpRequest(); // IE7+, XMLHttpRequest Level 1
+
+        return xhr;
+      } catch (e) {
+        console.error(e);
+        return null;
+      }
+    },
+
+    /**
+     * Get default's configs
+     *
+     * @param  {string}         name
+     * @return {string|object}
+     */
+    defaults: function (name) {
+      name = name || "";
+      var $defaults = {
+        debug: false,
+        async: true,
+        timeout: 3000,
+        method: "GET",
+        url: "",
+        data: "",
+        dataType: "text",
+        headers: {},
+        contentType: "text/plain; charset=UTF-8",
+        jsonp: "callback",
+        // for query string
+        xhrFields: {
+          //  like jQuery xhrFields options
+          withCredentials: false
+        },
+        sendBefore: function (xhr) {
+          return xhr; // or return this, this == xhr
+        },
+        success: function () {},
+        error: function (method, url) {
+          console.error("HTTP Request Error: ", method, url, this.status + " (" + (this.statusText ? this.statusText : "Unkown Error / Timeout") + ")");
+        },
+        ontimeout: function (method, url) {
+          console.error("HTTP Request Timeout: ", method, url, this.status + " (" + (this.statusText ? this.statusText : "Timeout") + ")");
+        }
+      };
+      return name !== "" && typeof name === "string" ? $defaults[name] : $defaults;
+    },
+
+    /**
+     * check need using XDomainRequest
+     *
+     * @param   {string}   url
+     * @returns {boolean}  useXDR
+     */
+    needUseXDomainRequest: function (url) {
+      var useXDR = false; // For IE8 & IE9
+
+      if (/^((http:|https:)?\/\/)/.test(url) && location.hostname.indexOf(url) < 0) {
+        if (window.XDomainRequest) {
+          useXDR = true;
+        }
+      }
+
+      return useXDR;
+    },
+
+    /**
+     * XHR requester
+     *
+     * @param  {object}                  [options={}]  request options
+     * @return {XMLHttpRequest|boolean}  xhr           XMLHttpRequest Or XDomainRequest Object
+     */
+    request: function (options) {
+      options = options || {};
+      var settings = extend(this.defaults(), options);
+      settings.method = settings.method.toUpperCase();
+      var useXDR = false;
+      var url = settings.url;
+      var data = settings.data;
+      var method = settings.method;
+      var urlData = urlBuild(url, data);
+
+      if (settings.debug) {
+        console.log(this.logPrefix + " settings =>", settings);
+      }
+
+      data = urlData.data;
+
+      if (method === "GET") {
+        url = urlData.url;
+      }
+
+      if (this.needUseXDomainRequest(url)) {
+        useXDR = true;
+
+        if (settings.debug) {
+          console.warn(this.logPrefix + " Cross domain request using XDomainRequest.");
+          console.warn(location.hostname + " => " + url);
+        }
+
+        if (!window.addEventListener && !/MSIE 8\.0/.test(navigator.userAgent)) {
+          console.error(this.logPrefix + " Your browser can'nt support cross domain request => " + url + ".");
+          return false;
+        }
+      }
+
+      var xhr = this.xhr(useXDR);
+
+      if (!xhr) {
+        return false;
+      }
+
+      if (typeof settings.xhrFields.withCredentials !== "undefined") {
+        xhr.withCredentials = settings.xhrFields.withCredentials;
+      }
+
+      var success = function () {
+        var result;
+
+        switch (settings.dataType) {
+          case "json":
+            result = JSON.parse(xhr.responseText);
+            break;
+
+          case "xml":
+            result = xhr.responseXML;
+            break;
+
+          default:
+            result = xhr.responseText;
+            break;
+        }
+
+        settings.success.bind(xhr)(result);
+      };
+
+      var readyStateChange = function (e) {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200 || xhr.status === 304) {
+            success();
+          } else {
+            settings.error.bind(xhr)(method, url, e);
+          }
+        }
+      };
+
+      if (useXDR) {
+        xhr.onload = success;
+
+        xhr.onerror = function (e) {
+          settings.error.bind(xhr)(method, url, e);
+        };
+
+        xhr.ontimeout = function (e) {
+          settings.ontimeout.bind(xhr)(method, url, e);
+        };
+
+        if (method !== "GET" && method !== "OPTIONS") {
+          method = "POST";
+        } else if (method === "OPTIONS") {
+          method = "GET";
+        }
+      } else {
+        xhr.addEventListener("readystatechange", readyStateChange);
+        xhr.addEventListener("error", function (e) {
+          settings.error.bind(xhr)(method, url, e);
+        });
+        xhr.addEventListener("timeout", function (e) {
+          settings.ontimeout.bind(xhr)(method, url, e);
+        });
+      }
+
+      xhr.open(method, url, settings.async);
+      var contentType = settings.contentType;
+
+      if (!useXDR) {
+        if (method !== "GET") {
+          contentType = "application/x-www-form-urlencoded";
+        }
+
+        xhr.setRequestHeader("Content-type", contentType); // Custom http headers, you can override default's Content-Type header.
+
+        for (var key2 in settings.headers) {
+          xhr.setRequestHeader(key2, settings.headers[key2]);
+        }
+      } // New property
+
+
+      xhr.$request = {
+        url: url,
+        method: method,
+        dataType: settings.dataType,
+        contentType: contentType,
+        headers: settings.headers
+      }; // Compatibility v0.1.0~0.2.0
+
+      xhr.$url = url;
+      xhr.$method = method;
+      xhr.$dataType = settings.dataType;
+      xhr.timeout = settings.timeout;
+
+      if (typeof settings.sendBefore === "function") {
+        // sendBefore for custom xhr fields
+        var _xhr = settings.sendBefore.bind(xhr)(xhr);
+
+        if (_xhr) {
+          if (_xhr instanceof XMLHttpRequest || typeof XDomainRequest !== "undefined" && _xhr instanceof XDomainRequest) {
+            xhr = _xhr;
+          }
+        }
+      }
+
+      xhr.send(data);
+      return xhr;
+    },
+
+    /**
+     * Execute request for short methods
+     *
+     * @param  {string}          method     HTTP method
+     * @param  {string|object}   url        request url or options k/v object
+     * @param  {object}          data       request data
+     * @param  {function}        callback   Success callback
+     * @param  {function}        error      Error callback
+     * @param  {object}          options    Request options
+     * @return {XMLHttpRequest}  xhr        XMLHttpRequest Or XDomainRequest Object
+     */
+    exec: function (method, url, data, callback, error, options) {
+      data = data || {};
+
+      callback = callback || function () {};
+
+      error = error || this.defaults("error");
+      options = options || {};
+
+      if (typeof data === "function") {
+        error = callback;
+        callback = data;
+        data = "";
+      }
+
+      var defaults = {
+        url: url,
+        method: method,
+        data: data,
+        success: callback,
+        error: error
+      };
+
+      if (typeof url === "object") {
+        options = url;
+        options.method = method;
+      }
+
+      return this.request(extend(defaults, options));
+    },
+
+    /**
+     * GET method
+     *
+     * @param  {string|object} url      request url or options k/v object
+     * @param  {object}        data     request datas
+     * @param  {function}      callback Success callback
+     * @param  {function}      error    Error callback
+     * @param  {object}        options  Request options
+     * @return {void}
+     */
+    get: function (url, data, callback, error, options) {
+      this.exec("GET", url, data, callback, error, options);
+    },
+
+    /**
+     * POST method
+     *
+     * @param  {string|object} url      request url or options k/v object
+     * @param  {object}        data     request datas
+     * @param  {function}      callback Success callback
+     * @param  {function}      error    Error callback
+     * @param  {object}        options  Request options
+     * @return {void}
+     */
+    post: function (url, data, callback, error, options) {
+      this.exec("POST", url, data, callback, error, options);
+    },
+
+    /**
+     * PUT method
+     *
+     * @param  {string|object} url      request url or options k/v object
+     * @param  {object}        data     request datas
+     * @param  {function}      callback Success callback
+     * @param  {function}      error    Error callback
+     * @param  {object}        options  Request options
+     * @return {void}
+     */
+    put: function (url, data, callback, error, options) {
+      this.exec("PUT", url, data, callback, error, options);
+    },
+
+    /**
+     * PATCH method
+     *
+     * @param  {string|object} url      request url or options k/v object
+     * @param  {object}        data     request datas
+     * @param  {function}      callback Success callback
+     * @param  {function}      error    Error callback
+     * @param  {object}        options  Request options
+     * @return {void}
+     */
+    patch: function (url, data, callback, error, options) {
+      this.exec("PATCH", url, data, callback, error, options);
+    },
+
+    /**
+     * DELETE method
+     *
+     * @param  {string|object} url      request url or options k/v object
+     * @param  {object}        data     request datas
+     * @param  {function}      callback Success callback
+     * @param  {function}      error    Error callback
+     * @param  {object}        options  Request options
+     * @return {void}
+     */
+    "delete": function (url, data, callback, error, options) {
+      this.exec("DELETE", url, data, callback, error, options);
+    },
+
+    /**
+     * Get json, link jQuery getJSON()
+     *
+     * @param  {string|object} url      request url or options k/v object
+     * @param  {object}        data     request datas
+     * @param  {function}      callback Success callback
+     * @param  {function}      error    Error callback
+     * @param  {object}        options  Request options
+     * @return {void}
+     */
+    json: function (url, data, callback, error, options) {
+      data = data || {};
+
+      callback = callback || function () {};
+
+      error = error || this.defaults("error");
+      options = options || {};
+
+      if (typeof data === "function") {
+        error = callback;
+        callback = data;
+        data = "";
+      }
+
+      var defaults = {
+        url: url,
+        dataType: "json",
+        method: "GET",
+        data: data,
+        success: callback,
+        error: error
+      };
+
+      if (typeof url === "object") {
+        options = url;
+        options.method = "GET";
+        options.dataType = "json";
+      }
+
+      this.request(extend(defaults, options));
+    },
+
+    /**
+     * Alias json()
+     *
+     * @param  {string|object} url      request url or options k/v object
+     * @param  {object}        data     request datas
+     * @param  {function}      callback Success callback
+     * @param  {function}      error    Error callback
+     * @param  {object}        options  Request options
+     * @return {void}
+     */
+    getJSON: function (url, data, callback, error, options) {
+      this.json(url, data, callback, error, options);
+    },
+
+    /**
+     * JSONP method
+     *
+     * @param  {string|object} url          request url or options k/v object
+     * @param  {object}        data         request datas
+     * @param  {function}      callback     Success callback
+     * @param  {string}        callbackName for query string name
+     * @return {void}
+     */
+    jsonp: function (url, data, callback, callbackName) {
+      callbackName = callbackName || "callback";
+
+      if (typeof data === "function") {
+        callbackName = callback;
+        callback = data;
+        data = "";
+      }
+
+      var urlData = urlBuild(url, data);
+      url = urlData.url;
+      data = urlData.data;
+      var fn = "__jsonp_" + callbackName + new Date().getTime() + "_" + Math.floor(Math.random() * 100000) + "__";
+      url += (url.indexOf("?") < 0 ? "?" : "&") + callbackName + "=" + fn;
+
+      var evalJsonp = function (callback) {
+        return function (data) {
+          if (typeof data === "string") {
+            try {
+              data = JSON.parse(data);
+            } catch (e) {}
+          }
+
+          data = data || {};
+          callback(data, url);
+          window[fn] = null;
+          document.body.removeChild(document.getElementById(fn));
+        };
+      };
+
+      window[fn] = evalJsonp(callback);
+      var script = document.createElement("script");
+      script.src = url;
+      script.async = true;
+      script.id = fn;
+      document.body.appendChild(script);
+    },
+
+    /**
+     * Get script file, like jQuery getScript()
+     *
+     * @param   {string}   src      javascript file path
+     * @param   {function} callback loaded callback function
+     * @returns {void}
+     */
+    getScript: function (src, callback) {
+      if (src === "") {
+        console.error("Error: Get script source can't be empty");
+        return;
+      }
+
+      callback = callback || function () {};
+
+      var head = document.getElementsByTagName("head")[0];
+      var loaded = document.querySelectorAll("script[src=\"" + src + "\"]");
+
+      if (loaded.length > 0) {
+        head.removeChild(loaded[0]);
+      }
+
+      var script = document.createElement("script");
+      script.type = "text/javascript";
+
+      script.onload = script.onreadystatechange = function () {
+        if (!script.readyState || /loaded|complete/.test(script.readyState)) {
+          script.onload = script.onreadystatechange = null;
+          script = undefined;
+          callback();
+        }
+      };
+
+      script.src = src;
+      script.async = true;
+      head.appendChild(script);
+    }
+  };
+
+  const hostUrl$1 = 'http://127.0.0.1';
   var lcStore$1 = {
     getTranscodingStream: {
-      value: `${hostUrl}:<port>/video/v1/transcoding?uri=<pull_uri>`,
+      value: `${hostUrl$1}:<port>/video/v1/transcoding?uri=<pull_uri>`,
       label: '获取视频流接口',
       actionName: 'getTranscodingStream'
     },
     setStreamResolution: {
-      value: `${hostUrl}:<port>/video/v1/change?resolution=<resolution>`,
+      value: `${hostUrl$1}:<port>/video/v1/change?resolution=<resolution>`,
       label: '修改视频流接口',
       actionName: 'setStreamResolution'
     }
   };
 
+  const hostUrl = 'http://127.0.0.1';
   /**
    * 全局配置
    * decryptionMode： 是否加密
@@ -546,24 +1077,98 @@
       return BASE64(s);
     }
   }
+  /**
+   * 随机获取端口号
+   * @returns 
+   */
+
   function getLocalPort() {
     return LOCAL_PORT[Math.floor(Math.random() * LOCAL_PORT.length)];
   }
-  function tansCodingToUrl(url, resolution, onToken) {
-    var _unicodeToBase;
+  /**
+   * 获取系统版本
+   * @returns 
+   */
+
+  function getAppPlayerVersion() {
+    return sessionStorage.getItem('_APP_PLAY_VERSION');
+  }
+  /**
+   * 通过本地存储进行播放类型检测
+   * @returns 
+   */
+
+  function detectorPlayeMode() {
+    const isPlus = getGlobalCache('mode');
+    sessionStorage.setItem('_TEMP_PLAY_MODE', isPlus); // 是否本地插件播放 0是互联网模式，不走插件
+
+    return isPlus;
+  }
+  /**
+   * 解析本地是否安装
+   */
+
+  function installState(callback) {
+    if (sessionStorage.getItem('_TEMP_PLAY_CODE') == '10000') return; // 进行本地检测
+
+    const port = getLocalPort();
+    httpx.get(`${hostUrl}:${port}/video/v1/state`, function (respondData) {
+      let res = {};
+
+      try {
+        res = JSON.parse(respondData);
+
+        if (res.code == 200) {
+          sessionStorage.setItem('_TEMP_PLAY_VERSION', res.version);
+
+          if (getAppPlayerVersion() != res.version) {
+            sessionStorage.setItem('_TEMP_PLAY_CODE', '10001');
+            throw `检测到版本${res.version}与应用系统版本不匹配，请检查`;
+          } else {
+            sessionStorage.setItem('_TEMP_PLAY_CODE', '10000');
+          }
+        } else {
+          sessionStorage.setItem('_TEMP_PLAY_CODE', '10002');
+          throw res.message || '';
+        }
+      } catch (err) {
+        console.log('插件初始化失败，请联系管理员！' + err);
+      }
+
+      callback && callback();
+    }, function (method, url) {
+      console.log('未安装插件！！！');
+      sessionStorage.setItem('_TEMP_PLAY_CODE', '');
+    });
+  }
+  /**
+   * 客户端插件访问入口
+   * @param {*} url 
+   * @param {*} resolution 
+   * @param {*} onToken 
+   * @returns 
+   */
+
+  function tansCodingToUrl(player, onToken) {
+    var _unicodeToBase, _unicodeToBase$replac, _unicodeToBase$replac2;
 
     let param1 = '';
     let param2 = '';
     let param3 = '';
-    const key = genuuid(); // 是否本地插件播放
+    let param4 = '';
+    let {
+      file,
+      resolution,
+      deviceInfo
+    } = player;
+    const key = genuuid(); // 进行类型检测 是否插件模式
 
-    if (!getGlobalCache('mode')) return url; // 是否加密
+    if (!detectorPlayeMode()) return file; // 是否加密
 
-    url = url + getGlobalCache(GL_CACHE.DM); // &resolution=<resolution>&bitrate=<bitrate>&key=<key>
-
+    file = file + getGlobalCache(GL_CACHE.DM);
     const url_info = {
       port: getLocalPort(),
-      pull_uri: (_unicodeToBase = unicodeToBase64(url)) === null || _unicodeToBase === void 0 ? void 0 : _unicodeToBase.replaceAll('=', '')
+      pull_uri: (_unicodeToBase = unicodeToBase64(file)) === null || _unicodeToBase === void 0 ? void 0 : (_unicodeToBase$replac = _unicodeToBase.replaceAll('=', '')) === null || _unicodeToBase$replac === void 0 ? void 0 : (_unicodeToBase$replac2 = _unicodeToBase$replac.replaceAll('/', '_')) === null || _unicodeToBase$replac2 === void 0 ? void 0 : _unicodeToBase$replac2.replaceAll('+', '_')
     }; // 分辨率，如果为空，为原始分辨率
 
     if (resolution) {
@@ -578,10 +1183,15 @@
       param1 = '&resolution=' + resolution; // 码率
 
       param3 = '&bitrate=' + findVideoAttribute(resolution, 'bitrate');
-      console.log(param1 + param3);
+    } // value: "100602", label: "球机"
+
+
+    if (deviceInfo && deviceInfo.type == "100602") {
+      param4 = '&quickplay=0';
     }
 
-    return lcStore$1.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3;
+    console.log(param1 + param3 + param4);
+    return lcStore$1.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3 + param4;
   }
 
   function _extends() {
@@ -1302,10 +1912,18 @@
       className: `${loading && status !== 'fail' ? 'lm-player-loading-animation' : status === 'fail' ? 'lm-player-loadfail' : ''} lm-player-loading-icon`
     }), /*#__PURE__*/React__default['default'].createElement("span", {
       className: "lm-player-message"
-    }, message));
+    }, message), /*#__PURE__*/React__default['default'].createElement("div", null));
   }
 
-  const NoSource = () => {
+  const NoSource = ({
+    install
+  }) => {
+    var _window$BSConfig;
+
+    const isPlus = sessionStorage.getItem('_TEMP_PLAY_CODE'); // const _TEMP_PLAY_PATH = sessionStorage.getItem('_TEMP_PLAY_PATH')
+
+    const _TEMP_PLAY_PATH = ((_window$BSConfig = window.BSConfig) === null || _window$BSConfig === void 0 ? void 0 : _window$BSConfig.playerDownloadUrl) || localStorage.getItem('ZVPlayerUrl');
+
     return /*#__PURE__*/React__default['default'].createElement("div", {
       className: "lm-player-message-mask lm-player-mask-loading-animation"
     }, /*#__PURE__*/React__default['default'].createElement(IconFont, {
@@ -1314,7 +1932,27 @@
       },
       type: "lm-player-PlaySource",
       title: "\u8BF7\u9009\u62E9\u89C6\u9891\u6E90"
-    }));
+    }), !isPlus && /*#__PURE__*/React__default['default'].createElement("a", {
+      className: "lm-player-message",
+      target: "_blank",
+      href: _TEMP_PLAY_PATH,
+      style: {
+        pointerEvents: 'all',
+        textDecoration: 'none'
+      },
+      download: "ZVPlayer.exe",
+      rel: "noopener noreferrer"
+    }, "\u4E0B\u8F7D\u64AD\u653E\u5668"), isPlus == '10001' && /*#__PURE__*/React__default['default'].createElement("a", {
+      className: "lm-player-message",
+      target: "_blank",
+      href: _TEMP_PLAY_PATH,
+      style: {
+        pointerEvents: 'all',
+        textDecoration: 'none'
+      },
+      download: "ZVPlayer.exe",
+      rel: "noopener noreferrer"
+    }, '安装版本过低，请升级播放器版本' + sessionStorage.getItem('_TEMP_PLAY_VERSION')));
   };
 
   function TineLine$1({
@@ -2096,13 +2734,19 @@
     onInitPlayer,
     screenNum,
     onVideoFn,
+    deviceInfo,
     ...props
   }) {
     const playContainerRef = React.useRef(null);
     const [playerObj, setPlayerObj] = React.useState(null);
-    const playerRef = React.useRef(null);
+    const playerRef = React.useRef(null); // 分屏数 分辨率
+
     const rate = React.useMemo(() => getScreenRate(screenNum), [screenNum]);
     const [resolution, setResolution] = React.useState(rate);
+    const [install, setInstall] = React.useState(false);
+    installState(function () {
+      setInstall(true);
+    });
 
     function onToken(token) {
       if (onVideoFn) {
@@ -2132,7 +2776,9 @@
         playContainer: playContainerRef.current,
         video: playContainerRef.current.querySelector('video'),
         resolution: resolution,
-        screenNum: screenNum
+        screenNum: screenNum,
+        playeMode: detectorPlayeMode(),
+        deviceInfo: deviceInfo
       };
       let isInit = false;
       const formartType = getVideoType(file);
@@ -2142,7 +2788,11 @@
 
         try {
           playerObject.flv = createFlvPlayer(playerObject.video, { ...props,
-            file: tansCodingToUrl(file, resolution, onToken)
+            file: tansCodingToUrl({
+              file,
+              resolution,
+              deviceInfo
+            }, onToken)
           });
         } catch (e) {
           console.error(e);
@@ -2198,6 +2848,7 @@
       playerObj: playerObj,
       isLive: props.isLive,
       key: file,
+      install: install,
       hideContrallerBar: props.hideContrallerBar,
       errorReloadTimer: props.errorReloadTimer,
       scale: props.scale,
@@ -2225,10 +2876,13 @@
     leftMidExtContents,
     rightExtContents,
     rightMidExtContents,
-    errorReloadTimer
+    errorReloadTimer,
+    install
   }) {
     if (!playerObj) {
-      return /*#__PURE__*/React__default['default'].createElement(NoSource, null);
+      return /*#__PURE__*/React__default['default'].createElement(NoSource, {
+        install: install
+      });
     }
 
     return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, /*#__PURE__*/React__default['default'].createElement(VideoMessage, {
@@ -2617,7 +3271,10 @@
       if (formartType === 'flv' || type === 'flv') {
         isInit = true;
         playerObject.flv = createFlvPlayer(playerObject.video, { ...props,
-          file: tansCodingToUrl(file, resolution)
+          file: tansCodingToUrl({
+            file,
+            resolution
+          })
         });
       }
 

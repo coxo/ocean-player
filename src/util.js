@@ -1,7 +1,8 @@
 import flvjs from 'flv.zv.js'
 import * as Hls from 'hls.js'
+import httpx from './service/httpx'
 import lcStore from "./service/url/lcStore";
-
+const hostUrl = 'http://127.0.0.1';
 /**
  * 全局配置
  * decryptionMode： 是否加密
@@ -16,6 +17,13 @@ import lcStore from "./service/url/lcStore";
  * 客户端插件模式，随机端口
  */
 export const LOCAL_PORT = ["15080", "15081", "15082", "15083", "15084", "15085", "15086", "15087", "15088", "15089"]
+
+export const PLAY_CODE = {
+  '10000': '', 
+  '10100': '版本需要更新',
+  '10200': '插件初始化异常',
+  '12000': '插件不存在',
+}
 
 export function findVideoAttribute(val, kv) {
   const ens = getVideoRatio()
@@ -346,7 +354,6 @@ export function JSONP(url){
 }
 
 export function BASE64(input) {  
- 
   // private property  
   let _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";  
 
@@ -365,10 +372,9 @@ export function BASE64(input) {
             utftext += String.fromCharCode(((c >> 6) & 63) | 128);  
             utftext += String.fromCharCode((c & 63) | 128);  
         }  
-
     }  
     return utftext;
-}  
+  }  
 
   // public method for encoding  
   var output = "";  
@@ -376,21 +382,21 @@ export function BASE64(input) {
   var i = 0;  
   input = _utf8_encode(input);  
   while (i < input.length) {  
-          chr1 = input.charCodeAt(i++);  
-          chr2 = input.charCodeAt(i++);  
-          chr3 = input.charCodeAt(i++);  
-          enc1 = chr1 >> 2;  
-          enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);  
-          enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);  
-          enc4 = chr3 & 63;  
-          if (isNaN(chr2)) {  
-              enc3 = enc4 = 64;  
-          } else if (isNaN(chr3)) {  
-              enc4 = 64;  
-          }  
-          output = output +  
-          _keyStr.charAt(enc1) + _keyStr.charAt(enc2) +  
-          _keyStr.charAt(enc3) + _keyStr.charAt(enc4);  
+      chr1 = input.charCodeAt(i++);  
+      chr2 = input.charCodeAt(i++);  
+      chr3 = input.charCodeAt(i++);  
+      enc1 = chr1 >> 2;  
+      enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);  
+      enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);  
+      enc4 = chr3 & 63;  
+      if (isNaN(chr2)) {  
+        enc3 = enc4 = 64;  
+      } else if (isNaN(chr3)) {  
+        enc4 = 64;  
+      }  
+      output = output +  
+      _keyStr.charAt(enc1) + _keyStr.charAt(enc2) +  
+      _keyStr.charAt(enc3) + _keyStr.charAt(enc4);  
   }  
   return output;  
 }
@@ -403,26 +409,93 @@ export function unicodeToBase64(s){
   }
 }
 
+/**
+ * 随机获取端口号
+ * @returns 
+ */
 export function getLocalPort(){
   return LOCAL_PORT[Math.floor(Math.random()*LOCAL_PORT.length)]
 }
 
-export function tansCodingToUrl(url, resolution, onToken){
+/**
+ * 获取系统版本
+ * @returns 
+ */
+ export function getAppPlayerVersion(){
+  return sessionStorage.getItem('_APP_PLAY_VERSION')
+}
+
+/**
+ * 通过本地存储进行播放类型检测
+ * @returns 
+ */
+export function detectorPlayeMode(){
+  const isPlus = getGlobalCache('mode')
+  sessionStorage.setItem('_TEMP_PLAY_MODE', isPlus)
+  // 是否本地插件播放 0是互联网模式，不走插件
+  return isPlus
+}
+/**
+ * 解析本地是否安装
+ */
+export function installState(callback){
+  if(sessionStorage.getItem('_TEMP_PLAY_CODE') == '10000') return;
+  // 进行本地检测
+  const port = getLocalPort()
+  httpx.get(`${hostUrl}:${port}/video/v1/state`, function(respondData) {
+    let res = {}
+    try{
+      res = JSON.parse(respondData)
+      if(res.code == 200){
+        sessionStorage.setItem('_TEMP_PLAY_VERSION', res.version)
+        if(getAppPlayerVersion() != res.version){
+          sessionStorage.setItem('_TEMP_PLAY_CODE','10001')
+          throw `检测到版本${res.version}与应用系统版本不匹配，请检查`
+        }else{
+          sessionStorage.setItem('_TEMP_PLAY_CODE','10000')
+        }
+      }else{
+        sessionStorage.setItem('_TEMP_PLAY_CODE','10002')
+        throw res.message || ''
+      }
+    }catch(err){
+      console.log('插件初始化失败，请联系管理员！'+ err)
+    }
+    callback && callback()
+}, function(method, url) {
+  console.log('未安装插件！！！')
+  sessionStorage.setItem('_TEMP_PLAY_CODE','')
+});
+}
+
+
+/**
+ * 客户端插件访问入口
+ * @param {*} url 
+ * @param {*} resolution 
+ * @param {*} onToken 
+ * @returns 
+ */
+export function tansCodingToUrl(player, onToken){
+  
   let param1 = ''
   let param2 = ''
   let param3 = ''
+  let param4 = ''
+
+  let {file, resolution, deviceInfo} = player
 
   const key = genuuid()
-  // 是否本地插件播放
-  if(!getGlobalCache('mode')) return url
+
+  // 进行类型检测 是否插件模式
+  if (!detectorPlayeMode()) return file
 
   // 是否加密
-  url = url + getGlobalCache(GL_CACHE.DM)
+  file = file + getGlobalCache(GL_CACHE.DM)
 
-  // &resolution=<resolution>&bitrate=<bitrate>&key=<key>
   const url_info ={
       port: getLocalPort(),
-      pull_uri: unicodeToBase64(url)?.replaceAll('=','')
+      pull_uri: unicodeToBase64(file)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','_')
   }
   // 分辨率，如果为空，为原始分辨率
   if(resolution){
@@ -440,9 +513,14 @@ export function tansCodingToUrl(url, resolution, onToken){
     // 码率
     param3 = '&bitrate=' + findVideoAttribute(resolution,'bitrate')
 
-    console.log(param1+param3)
   }
+  
+  // value: "100602", label: "球机"
+  if(deviceInfo && deviceInfo.type == "100602"){
+    param4 = '&quickplay=0'
+  }
+  console.log(param1+param3+param4)
 
-  return lcStore.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3
+  return lcStore.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3 + param4
 }
 
