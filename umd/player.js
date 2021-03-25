@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('flv.zv.js'), require('hls.js'), require('prop-types'), require('react-dom')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'react', 'flv.zv.js', 'hls.js', 'prop-types', 'react-dom'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.LMPlayer = {}, global.React, global.flvjs, global.Hls, global.PropTypes, global.ReactDOM));
-}(this, (function (exports, React, flvjs, Hls, PropTypes, ReactDOM) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('flv.zv.js'), require('hls.js'), require('prop-types'), require('react-dom'), require('antd')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'react', 'flv.zv.js', 'hls.js', 'prop-types', 'react-dom', 'antd'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.LMPlayer = {}, global.React, global.flvjs, global.Hls, global.PropTypes, global.ReactDOM, global.antd));
+}(this, (function (exports, React, flvjs, Hls, PropTypes, ReactDOM, antd) { 'use strict';
 
   function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -660,7 +660,8 @@
 
   const GL_CACHE = {
     DM: 'decryptionMode',
-    SR: 'switchRate'
+    SR: 'switchRate',
+    PT: 'palette'
   };
   /**
    * 客户端插件模式，随机端口
@@ -1109,6 +1110,8 @@
    */
 
   function installState(callback) {
+    // 进行类型检测 是否插件模式
+    if (!detectorPlayeMode()) return;
     if (sessionStorage.getItem('_TEMP_PLAY_CODE') == '10000') return; // 进行本地检测
 
     const port = getLocalPort();
@@ -1168,7 +1171,7 @@
     file = file + getGlobalCache(GL_CACHE.DM);
     const url_info = {
       port: getLocalPort(),
-      pull_uri: (_unicodeToBase = unicodeToBase64(file)) === null || _unicodeToBase === void 0 ? void 0 : (_unicodeToBase$replac = _unicodeToBase.replaceAll('=', '')) === null || _unicodeToBase$replac === void 0 ? void 0 : (_unicodeToBase$replac2 = _unicodeToBase$replac.replaceAll('/', '_')) === null || _unicodeToBase$replac2 === void 0 ? void 0 : _unicodeToBase$replac2.replaceAll('+', '_')
+      pull_uri: (_unicodeToBase = unicodeToBase64(file)) === null || _unicodeToBase === void 0 ? void 0 : (_unicodeToBase$replac = _unicodeToBase.replaceAll('=', '')) === null || _unicodeToBase$replac === void 0 ? void 0 : (_unicodeToBase$replac2 = _unicodeToBase$replac.replaceAll('/', '_')) === null || _unicodeToBase$replac2 === void 0 ? void 0 : _unicodeToBase$replac2.replaceAll('+', '-')
     }; // 分辨率，如果为空，为原始分辨率
 
     if (resolution) {
@@ -1190,7 +1193,7 @@
       param4 = '&quickplay=0';
     }
 
-    console.log(param1 + param3 + param4);
+    console.log(file + param1 + param3 + param4);
     return lcStore$1.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3 + param4;
   }
 
@@ -1598,6 +1601,114 @@
     isHistory: PropTypes__default['default'].bool
   };
 
+  function ColorPicker({
+    playContainer,
+    api,
+    colorfilter
+  }) {
+    const [brightnessValue, setBrightnessValue] = React.useState(50);
+    const [contrastValue, setContrastValue] = React.useState(50);
+    const [saturateValue, setSaturateValue] = React.useState(50);
+    const [hueValue, setHueValue] = React.useState(0);
+    const brightness = React.useMemo(() => {
+      const cv = brightnessValue / 50;
+      if (cv == 1) return '';
+      return `brightness(${cv})`;
+    }, [brightnessValue]);
+    const contrast = React.useMemo(() => {
+      const cv = contrastValue / 50;
+      if (cv == 1) return '';
+      return `contrast(${cv})`;
+    }, [contrastValue]);
+    const saturate = React.useMemo(() => {
+      const cv = saturateValue / 50;
+      if (cv == 1) return '';
+      return `saturate(${cv})`;
+    }, [saturateValue]);
+    const hue = React.useMemo(() => {
+      const cv = hueValue;
+      if (cv == 0) return '';
+      return `hue-rotate(${cv}deg)`;
+    }, [hueValue]);
+
+    const handleAllChange = data => {
+      colorfilter({
+        '-webkit-filter': `${brightness} ${contrast} ${saturate} ${hue}`
+      });
+    };
+
+    const handleBrightnessChange = data => {
+      setBrightnessValue(data);
+      handleAllChange();
+    };
+
+    const handleContrastChange = data => {
+      setContrastValue(data);
+      handleAllChange();
+    };
+
+    const handleSaturateChange = data => {
+      setSaturateValue(data);
+      handleAllChange();
+    };
+
+    const handleHueChange = data => {
+      setHueValue(data);
+      handleAllChange();
+    };
+
+    const handleResetChange = data => {
+      setBrightnessValue(50);
+      setContrastValue(50);
+      setSaturateValue(50);
+      setHueValue(0);
+      colorfilter({});
+    };
+
+    return /*#__PURE__*/React__default['default'].createElement(Bar, {
+      className: 'colorPicker'
+    }, /*#__PURE__*/React__default['default'].createElement(IconFont, {
+      title: '画面设置',
+      type: 'lm-player-S_Device_shezhi'
+    }), /*#__PURE__*/React__default['default'].createElement("div", {
+      class: "colorPicker-container"
+    }, /*#__PURE__*/React__default['default'].createElement("span", null, " \u89C6\u9891\u753B\u9762\u8BBE\u7F6E "), " ", /*#__PURE__*/React__default['default'].createElement("span", {
+      className: "colorPicker-reset",
+      onClick: handleResetChange
+    }, "\xA0", /*#__PURE__*/React__default['default'].createElement(IconFont, {
+      title: '重置',
+      type: 'lm-player-Refresh_Main'
+    }), "\u91CD\u7F6E "), /*#__PURE__*/React__default['default'].createElement("div", {
+      className: "colorPicker-container-control"
+    }, /*#__PURE__*/React__default['default'].createElement("span", null, " \u4EAE\u5EA6 "), " ", /*#__PURE__*/React__default['default'].createElement(antd.Slider, {
+      min: 0,
+      max: 100,
+      onChange: handleBrightnessChange,
+      value: brightnessValue
+    }), /*#__PURE__*/React__default['default'].createElement("span", null, " ", brightnessValue, " ")), /*#__PURE__*/React__default['default'].createElement("div", {
+      className: "colorPicker-container-control"
+    }, /*#__PURE__*/React__default['default'].createElement("span", null, " \u5BF9\u6BD4\u5EA6 "), " ", /*#__PURE__*/React__default['default'].createElement(antd.Slider, {
+      min: 0,
+      max: 100,
+      onChange: handleContrastChange,
+      value: contrastValue
+    }), /*#__PURE__*/React__default['default'].createElement("span", null, " ", contrastValue, " ")), /*#__PURE__*/React__default['default'].createElement("div", {
+      className: "colorPicker-container-control"
+    }, /*#__PURE__*/React__default['default'].createElement("span", null, " \u9971\u548C\u5EA6 "), " ", /*#__PURE__*/React__default['default'].createElement(antd.Slider, {
+      min: 0,
+      max: 100,
+      onChange: handleSaturateChange,
+      value: saturateValue
+    }), /*#__PURE__*/React__default['default'].createElement("span", null, " ", saturateValue, " ")), /*#__PURE__*/React__default['default'].createElement("div", {
+      className: "colorPicker-container-control hue-horizontal"
+    }, /*#__PURE__*/React__default['default'].createElement("span", null, " \u8272\u8C03 "), " ", /*#__PURE__*/React__default['default'].createElement(antd.Slider, {
+      min: 0,
+      max: 360,
+      onChange: handleHueChange,
+      value: hueValue
+    }), /*#__PURE__*/React__default['default'].createElement("span", null, " ", hueValue, " "))));
+  }
+
   function RightBar({
     playContainer,
     api,
@@ -1606,13 +1717,15 @@
     rightExtContents,
     rightMidExtContents,
     isLive,
-    switchResolution
+    switchResolution,
+    colorPicker
   }) {
     const [dep, setDep] = React.useState(Date.now()); // 获取视频分辨率
 
     const ratioValue = getVideoRatio(); // 默认
 
     const [viewText, setViewText] = React.useState(findVideoAttribute(api.getResolution(), 'name'));
+    const isPalette = getGlobalCache(GL_CACHE.PT) || false;
     const isSwithRate = getGlobalCache(GL_CACHE.SR) || false;
     React.useEffect(() => {
       const update = () => setDep(Date.now());
@@ -1664,14 +1777,16 @@
       title: "\u653E\u5927",
       onClick: () => setScale(0.2),
       type: 'lm-player-ZoomIn_Main'
-    }))), isLive && isSwithRate && /*#__PURE__*/React__default['default'].createElement(Bar, {
-      className: 'ratioMenu'
+    }))), isPalette && /*#__PURE__*/React__default['default'].createElement(ColorPicker, {
+      colorfilter: colorPicker
+    }), isLive && isSwithRate && /*#__PURE__*/React__default['default'].createElement(Bar, {
+      className: 'resolution-menu'
     }, /*#__PURE__*/React__default['default'].createElement("span", {
-      class: "ratioMenu-main"
+      class: "resolution-menu-main"
     }, viewText), /*#__PURE__*/React__default['default'].createElement("ul", {
-      class: "ratioMenu-level"
+      class: "resolution-menu-level"
     }, Object.keys(ratioValue).map(item => ratioValue[item].show && /*#__PURE__*/React__default['default'].createElement("li", {
-      class: "ratioMenu-level-1",
+      class: "resolution-menu-level-1",
       onClick: () => setRatio(item)
     }, ratioValue[item].name)))), snapshot && /*#__PURE__*/React__default['default'].createElement(Bar, null, /*#__PURE__*/React__default['default'].createElement(IconFont, {
       title: "\u622A\u56FE",
@@ -1739,7 +1854,8 @@
     reloadHistory,
     isLive,
     leftExtContents,
-    leftMidExtContents
+    leftMidExtContents,
+    colorPicker
   }) {
     return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, /*#__PURE__*/React__default['default'].createElement("div", {
       className: `contraller-bar-layout ${!visibel ? 'hide-contraller-bar' : ''}`
@@ -1758,6 +1874,7 @@
       isLive: isLive,
       playContainer: playContainer,
       snapshot: snapshot,
+      colorPicker: colorPicker,
       switchResolution: switchResolution,
       rightExtContents: rightExtContents,
       rightMidExtContents: rightMidExtContents
@@ -1942,7 +2059,9 @@
       },
       download: "ZVPlayer.exe",
       rel: "noopener noreferrer"
-    }, "\u4E0B\u8F7D\u64AD\u653E\u5668"), isPlus == '10001' && /*#__PURE__*/React__default['default'].createElement("a", {
+    }, "\u8BF7", /*#__PURE__*/React__default['default'].createElement("span", {
+      className: "install-link"
+    }, "\u4E0B\u8F7D"), "\u64AD\u653E\u63D2\u4EF6"), isPlus == '10001' && /*#__PURE__*/React__default['default'].createElement("a", {
       className: "lm-player-message",
       target: "_blank",
       href: _TEMP_PLAY_PATH,
@@ -1952,7 +2071,9 @@
       },
       download: "ZVPlayer.exe",
       rel: "noopener noreferrer"
-    }, '安装版本过低，请升级播放器版本' + sessionStorage.getItem('_TEMP_PLAY_VERSION')));
+    }, "\u5F53\u524D\u64AD\u653E\u63D2\u4EF6\u7248\u672C\u4F4E\uFF0C\u5EFA\u8BAE\u4F60\u5347\u7EA7\u6700\u65B0\u7248\u672C", /*#__PURE__*/React__default['default'].createElement("span", {
+      className: "install-link"
+    }, sessionStorage.getItem('_APP_PLAY_VERSION'))));
   };
 
   function TineLine$1({
@@ -2743,6 +2864,7 @@
 
     const rate = React.useMemo(() => getScreenRate(screenNum), [screenNum]);
     const [resolution, setResolution] = React.useState(rate);
+    const [colorPicker, setColorPicker] = React.useState(null);
     const [install, setInstall] = React.useState(false);
     installState(function () {
       setInstall(true);
@@ -2843,7 +2965,8 @@
       poster: poster,
       controls: false,
       playsInline: playsinline,
-      loop: loop
+      loop: loop,
+      style: colorPicker
     })), /*#__PURE__*/React__default['default'].createElement(VideoTools$1, {
       playerObj: playerObj,
       isLive: props.isLive,
@@ -2854,6 +2977,9 @@
       scale: props.scale,
       switchResolution: resolution => {
         setResolution(resolution);
+      },
+      colorPicker: value => {
+        setColorPicker(value);
       },
       snapshot: props.snapshot,
       leftExtContents: props.leftExtContents,
@@ -2877,7 +3003,8 @@
     rightExtContents,
     rightMidExtContents,
     errorReloadTimer,
-    install
+    install,
+    colorPicker
   }) {
     if (!playerObj) {
       return /*#__PURE__*/React__default['default'].createElement(NoSource, {
@@ -2901,6 +3028,7 @@
       playContainer: playerObj.playContainer,
       video: playerObj.video,
       snapshot: snapshot,
+      colorPicker: colorPicker,
       switchResolution: switchResolution,
       rightExtContents: rightExtContents,
       rightMidExtContents: rightMidExtContents,

@@ -10,7 +10,8 @@ const hostUrl = 'http://127.0.0.1';
  */
  export const GL_CACHE = {
   DM :'decryptionMode',
-  SR :'switchRate'
+  SR :'switchRate',
+  PT :'palette',
 }
 
 /**
@@ -439,6 +440,9 @@ export function detectorPlayeMode(){
  * 解析本地是否安装
  */
 export function installState(callback){
+  // 进行类型检测 是否插件模式
+  if (!detectorPlayeMode()) return;
+
   if(sessionStorage.getItem('_TEMP_PLAY_CODE') == '10000') return;
   // 进行本地检测
   const port = getLocalPort()
@@ -495,7 +499,7 @@ export function tansCodingToUrl(player, onToken){
 
   const url_info ={
       port: getLocalPort(),
-      pull_uri: unicodeToBase64(file)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','_')
+      pull_uri: unicodeToBase64(file)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','-')
   }
   // 分辨率，如果为空，为原始分辨率
   if(resolution){
@@ -519,7 +523,7 @@ export function tansCodingToUrl(player, onToken){
   if(deviceInfo && deviceInfo.type == "100602"){
     param4 = '&quickplay=0'
   }
-  console.log(param1+param3+param4)
+  console.log(file+param1+param3+param4)
 
   return lcStore.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3 + param4
 }

@@ -14,7 +14,7 @@ function VideoMessage({ event, api }) {
       return '视频错误'
     }
     if (state.status === 'reload') {
-      if(!state.errorTimer){
+      if (!state.errorTimer) {
         return `视频加载错误，正在进行重连...`
       }
       return `视频加载错误，正在进行重连第${state.errorTimer}次重连`
@@ -22,16 +22,16 @@ function VideoMessage({ event, api }) {
   }, [state.errorTimer, state.status])
 
   useEffect(() => {
-    const openStartLoading = () => setState(old =>({ ...old, loading: true }))
-    const openWaitLoading = () => setState(old =>({ ...old}))
-    const openSeekLoading = () => setState(old =>({ ...old, loading: true }))
+    const openStartLoading = () => setState((old) => ({ ...old, loading: true }))
+    const openWaitLoading = () => setState((old) => ({ ...old }))
+    const openSeekLoading = () => setState((old) => ({ ...old, loading: true }))
 
-    const closeLoading = () => setState(old => ({ ...old, loading: false }))
-    const errorReload = timer => setState(() => ({ status: 'reload', errorTimer: timer, loading: true }))
-    const reloadFail = () => setState(old => ({ ...old, status: 'fail' , loading: false}))
-    const reloadSuccess = () => setState(old => ({ ...old, status: null, loading: false }))
-    const reload = () => setState(old => ({ ...old, status: 'reload', loading: true }))
-    const playEnd = () => (setState(old => ({ ...old, status: null, loading: false })), api.pause())
+    const closeLoading = () => setState((old) => ({ ...old, loading: false }))
+    const errorReload = (timer) => setState(() => ({ status: 'reload', errorTimer: timer, loading: true }))
+    const reloadFail = () => setState((old) => ({ ...old, status: 'fail', loading: false }))
+    const reloadSuccess = () => setState((old) => ({ ...old, status: null, loading: false }))
+    const reload = () => setState((old) => ({ ...old, status: 'reload', loading: true }))
+    const playEnd = () => (setState((old) => ({ ...old, status: null, loading: false })), api.pause())
 
     event.addEventListener('loadstart', openStartLoading)
     event.addEventListener('waiting', openWaitLoading)
@@ -68,21 +68,42 @@ function VideoMessage({ event, api }) {
         className={`${loading && status !== 'fail' ? 'lm-player-loading-animation' : status === 'fail' ? 'lm-player-loadfail' : ''} lm-player-loading-icon`}
       />
       <span className="lm-player-message">{message}</span>
-      <div>
-    </div>
+      <div></div>
     </div>
   )
 }
 
-export const NoSource = ({install}) => {
+export const NoSource = ({ install }) => {
   const isPlus = sessionStorage.getItem('_TEMP_PLAY_CODE')
   // const _TEMP_PLAY_PATH = sessionStorage.getItem('_TEMP_PLAY_PATH')
-  const _TEMP_PLAY_PATH = (window.BSConfig?.playerDownloadUrl) || localStorage.getItem('ZVPlayerUrl')
+  const _TEMP_PLAY_PATH = window.BSConfig?.playerDownloadUrl || localStorage.getItem('ZVPlayerUrl')
   return (
     <div className="lm-player-message-mask lm-player-mask-loading-animation">
       <IconFont style={{ fontSize: 80 }} type="lm-player-PlaySource" title="请选择视频源"></IconFont>
-      {(!isPlus)  && (<a className="lm-player-message" target="_blank" href={_TEMP_PLAY_PATH} style={{ pointerEvents: 'all',textDecoration: 'none' }} download="ZVPlayer.exe" rel="noopener noreferrer">下载播放器</a>)}
-      {(isPlus == '10001')  && (<a className="lm-player-message" target="_blank" href={_TEMP_PLAY_PATH} style={{ pointerEvents: 'all',textDecoration: 'none' }} download="ZVPlayer.exe" rel="noopener noreferrer">{'安装版本过低，请升级播放器版本' + sessionStorage.getItem('_TEMP_PLAY_VERSION')}</a>)}
+      {!isPlus && (
+        <a
+          className="lm-player-message"
+          target="_blank"
+          href={_TEMP_PLAY_PATH}
+          style={{ pointerEvents: 'all', textDecoration: 'none' }}
+          download="ZVPlayer.exe"
+          rel="noopener noreferrer"
+        >
+          请<span className="install-link">下载</span>播放插件
+        </a>
+      )}
+      {isPlus == '10001' && (
+        <a
+          className="lm-player-message"
+          target="_blank"
+          href={_TEMP_PLAY_PATH}
+          style={{ pointerEvents: 'all', textDecoration: 'none' }}
+          download="ZVPlayer.exe"
+          rel="noopener noreferrer"
+        >
+          当前播放插件版本低，建议你升级最新版本<span className="install-link">{sessionStorage.getItem('_APP_PLAY_VERSION')}</span>
+        </a>
+      )}
     </div>
   )
 }

@@ -20,6 +20,9 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
   const rate = useMemo(() => getScreenRate(screenNum), [screenNum]);
   const [resolution, setResolution] = useState(rate);
 
+
+  const [colorPicker, setColorPicker] = useState(null);
+
   const [install, setInstall] = useState(false);
 
   installState(function(){
@@ -97,7 +100,7 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
   return (
     <div className={`lm-player-container ${className}`} ref={playContainerRef}>
       <div className="player-mask-layout">
-        <video autoPlay={autoPlay} preload={preload} muted={muted} poster={poster} controls={false} playsInline={playsinline} loop={loop} />
+        <video autoPlay={autoPlay} preload={preload} muted={muted} poster={poster} controls={false} playsInline={playsinline} loop={loop} style={colorPicker} />
       </div>
       <VideoTools
         playerObj={playerObj}
@@ -109,6 +112,9 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
         scale={props.scale}
         switchResolution={(resolution)=>{
           setResolution(resolution)
+        }}
+        colorPicker={(value)=>{
+          setColorPicker(value)
         }}
         snapshot={props.snapshot}
         leftExtContents={props.leftExtContents}
@@ -136,6 +142,7 @@ function VideoTools({
   rightMidExtContents,
   errorReloadTimer,
   install,
+  colorPicker,
 }) {
   if (!playerObj) {
     return <NoSource install={install}/>;
@@ -152,6 +159,7 @@ function VideoTools({
             playContainer={playerObj.playContainer}
             video={playerObj.video}
             snapshot={snapshot}
+            colorPicker={colorPicker}
             switchResolution={switchResolution}
             rightExtContents={rightExtContents}
             rightMidExtContents={rightMidExtContents}

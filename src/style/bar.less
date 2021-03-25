@@ -61,26 +61,16 @@
     }
   }
 
-  .contraller-bar-item.ratioMenu{
-    margin:0;
-    padding:0;
-    list-style:none;
+  .contraller-bar-item.resolution-menu{
     text-align: center;
     font-size: 12px;
     width:auto;
-    clear:both;
     position: relative;
-    display: -moz-inline-stack;
-    display: inline-block;
-    *display: inline;
-    zoom: 1;
     min-height: 25px;
     line-height: 28px;
     height: 28px;
-    _height: 28px;
-    vertical-align: top;
-    border-left: 1px solid #222222;
-    &:hover .ratioMenu-level{
+    padding-right:5px;
+    &:hover .resolution-menu-level{
       display: block;
     }
     ul {
@@ -97,7 +87,7 @@
       list-style:none;
       text-align: right;
     }
-    .ratioMenu-main{
+    .resolution-menu-main{
       color: #fff;
       background-image: linear-gradient(-180deg,#37415f,#333 98%);
       cursor: unset;
@@ -106,14 +96,14 @@
       padding: 0 2px;
       display: inline-block;
     }
-    .ratioMenu-level{
+    .resolution-menu-level{
       z-index: 5;
       left: auto;
       right: 0px;
       top: auto;
       bottom: 28px;
     }
-    .ratioMenu-level-1 {
+    .resolution-menu-level-1 {
       position: relative;
       width: 60px;
       padding: 0 10px;
@@ -129,6 +119,57 @@
       &:active{
         background-image: linear-gradient(-180deg,#37415f,#333 98%);
       }
+    }
+  }
+
+  .contraller-bar-item.colorPicker{
+    .colorPicker-container{
+      position: absolute;
+      display: none;
+      margin: 0;
+      padding: 5px;
+      background-color: #333;
+      -webkit-box-shadow: 0px -2px 6px 1px #222;
+      box-shadow: 0px -2px 6px 1px #222;
+      width: 320px;
+      z-index: 5;
+      left: auto;
+      right: 30px;
+      top: auto;
+      bottom: 28px;
+      .ant-slider{
+        width: 68%;
+        position: absolute;
+        left: 55px;
+        top: 3px;
+      }
+      .colorPicker-reset{
+        float: right;
+        cursor: pointer;
+        &:hover{
+          color: #ffaa00;
+        }
+      }
+      .hue-horizontal{
+        .ant-slider-rail, .ant-slider-track{
+          background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0
+          33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+         background: -webkit-linear-gradient(to right, #f00 0%, #ff0
+          17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+        }
+      }
+      span{
+        color: #fff;
+      }
+      span:last-child{position: absolute;right: 8px;}
+    }
+    &:hover .colorPicker-container{
+      display: block;
+    }
+    .colorPicker-container-control{
+      position: relative;
+      padding:8px;
+      clear: both;
     }
   }
 }

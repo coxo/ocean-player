@@ -21,6 +21,7 @@ function ContrallerBar({
   isLive,
   leftExtContents,
   leftMidExtContents,
+  colorPicker,
 }) {
   return (
     <>
@@ -41,6 +42,7 @@ function ContrallerBar({
           isLive={isLive}
           playContainer={playContainer}
           snapshot={snapshot}
+          colorPicker={colorPicker}
           switchResolution={switchResolution}
           rightExtContents={rightExtContents}
           rightMidExtContents={rightMidExtContents}

@@ -10,7 +10,10 @@
     <script src="https://cdn.bootcss.com/react-dom/16.10.2/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.bootcss.com/prop-types/15.7.2/prop-types.min.js"></script>
     <script src="./flv.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.bootcss.com/hls.js/8.0.0-beta.3/hls.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/antd/4.14.0/antd.min.js"></script>
+    
 
     <script src="../umd/player.js"></script>
     <style>
@@ -36,7 +39,8 @@
         height: 32px;
       }
     </style>
-    <link rel="stylesheet" href="umd/player.css" />
+    <link href="https://cdn.bootcdn.net/ajax/libs/antd/4.14.0/antd.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../umd/player.css" />
   </head>
   <body>
     <div id="app"></div>
@@ -52,6 +56,8 @@
         { value: 'flv', label: 'FLV' },
         { value: 'hls', label: 'HLS' },
       ]
+      // sessionStorage.setItem('_TEMP_PLAY_CODE','1111')
+      sessionStorage.setItem('_TEMP_PLAY_PATH','xxxxx')
       const RootCompoent = () => {
         const liveInputRef = useRef(null)
         const historyInputRef = useRef(null)
@@ -61,11 +67,25 @@
         const [liveType, setLiveType] = useState('')
         const [historyType, setHistoryType] = useState('')
 
+        const sNumInputRef = useRef(null)
+        const [liveNum, setLiveNum] = useState(4)
+        
+        const [deviceInfo, setDeviceInfo] = useState({
+          type: '100602',
+        })
+
         const onFileChange = function(e){
           setIsLive(false)
           setLiveType("flv")
           liveInputRef.current.value = URL.createObjectURL(e.target.files[0])
         }
+        localStorage.setItem('PY_PLUS','{"mode":2,"decryptionMode":"&decryption=1","reloadTimer":10,"switchRate":true,"palette":true}')
+
+        sessionStorage.setItem('_APP_PLAY_VERSION','v1.0.4')
+        function onVideoFn(obj){
+          console.log('+++++'+obj.uuid)
+        }
+
         return (
           <div style={{ width: '100%', padding: 20 }}>
             <div style={{ width: 800, margin: '0 auto 40px auto' }}>
@@ -116,11 +136,20 @@
                   <input type="file" name="" id="" onChange={onFileChange} />
                   <button>本地录像</button>
                 </span>
-                <button style={{ width: 60, height: 32 }} onClick={(e) => setFile('http://localhost:15080/video/v1/transcoding?uri=aHR0cDovLzE5Mi4xNjguNjYuMjIxL3N0YXRpY1Jlc291cmNlL3YyL3ZpZGVvL2xpdmUuZmx2LzUzNzA2NzUyNj9BdXRob3JpemF0aW9uPWV5SmhiR2NpT2lKSVV6STFOaUo5LmV5SnZjbWRoYm1sNllYUnBiMjVKWkNJNklqRXdNREV3TVRBd01EUXpOaUlzSW1WNGRDSTZNVFl4TlRZeE1EazRNRFV3TWl3aWRXbGtJam9pTVRBeE1EQXdNREF3TWpReklpd2lkbUZzYVdSVGRHRjBaU0k2TVRBME5EQTJMQ0p5YjJ4bFNXUWlPbHN4TURBd01EQXhNVEF5TnpaZExDSjJZV3hwWkZScGJXVWlPbTUxYkd3c0ltOXdkRU5sYm5SbGNrbGtJam9pTVRBd01UQXdNREF3TWpJM0lpd2lkWE5sY2xSNWNHVWlPakV3TURjd01pd2lhV0YwSWpveE5qRTFNelV4Tnpnd05UQXlmUS5UNlF1bXF4RU5aUEg3TWJzUkUzdDQtXzduZkNkMVQwY0dFNDFYSVluX2xjJmRlY3J5cHRpb249MQ')}>
+                <button style={{ width: 60, height: 32 }} onClick={(e) => {
+                  // setFile(liveInputRef.current.value)
+                //  setFile('http://localhost:10223/demo2/xx.mp4')
+
+                  
+                setFile('http://192.168.66.221/staticResource/v2/video/live.flv/537067522?Authorization=eyJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25JZCI6IjEwMDEwMTAwMDQzNiIsImV4dCI6MTYxNjYzNTcxMjI2NCwidWlkIjoiMTAxMDAwMDAwMjQzIiwidmFsaWRTdGF0ZSI6MTA0NDA2LCJyb2xlSWQiOlsxMDAwMDAxMTAyNzZdLCJ2YWxpZFRpbWUiOm51bGwsIm9wdENlbnRlcklkIjoiMTAwMTAwMDAwMjI3IiwidXNlclR5cGUiOjEwMDcwMiwiaWF0IjoxNjE2Mzc2NTEyMjY0fQ.FQV71C1bfQ86iTJ2yWQTPEhcj6ODO3pGvd8Sl9k0ZV8')
+                //  setLiveNum(sNumInputRef.current.value)
+                }}>
                   播放
                 </button>
-              </div>
-              <Player type={liveType} file={file} isLive={isLive} />
+                <div/>
+                </div>
+              <input ref={sNumInputRef} style={{ width: 50, height: 32 }} type="text" placeholder="请输入分屏数" />
+              <Player type={liveType} file={file} isLive={isLive} screenNum={liveNum} deviceInfo={deviceInfo} onVideoFn={onVideoFn} />
             </div>
             <div style={{ width: 800, margin: '0 auto 40px auto' }}>
               <h2 style={{ marginBottom: 10 }}>HistoryPlayer适用多地址拼凑一个播放 特殊场景使用</h2>

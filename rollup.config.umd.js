@@ -25,7 +25,7 @@ export default {
       ['react-dom']: 'ReactDOM',
       ['flv.zv.js']: 'flvjs',
       ['hls.js']: 'Hls',
-      ['axios']:'axios'
+      ['antd']:'antd'
     },
   },
   plugins: [

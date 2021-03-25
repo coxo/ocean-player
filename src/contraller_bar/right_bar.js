@@ -3,8 +3,9 @@ import IconFont from '../iconfont'
 import Bar from './bar'
 import { isFullscreen, fullScreenListener, computedBound, getVideoRatio, findVideoAttribute, getScreenRate, getGlobalCache, GL_CACHE } from '../util'
 import PropTypes from 'prop-types'
+import ColorPicker from './colorPicker'
 
-function RightBar({ playContainer, api, scale, snapshot, rightExtContents, rightMidExtContents, isLive, switchResolution}) {
+function RightBar({ playContainer, api, scale, snapshot, rightExtContents, rightMidExtContents, isLive, switchResolution, colorPicker}) {
   const [dep, setDep] = useState(Date.now())
 
   // 获取视频分辨率
@@ -12,6 +13,7 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
   // 默认
   const [viewText, setViewText] = useState(findVideoAttribute(api.getResolution(),'name'));
 
+  const isPalette = getGlobalCache(GL_CACHE.PT) || false
   const isSwithRate = getGlobalCache(GL_CACHE.SR) || false
 
 
@@ -52,13 +54,12 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
     [api, playContainer]
   )
 
-  const setRatio = useCallback(
-    (...args) => {
+  const setRatio = useCallback((...args) => {
       setViewText(ratioValue[args].name)
       switchResolution(ratioValue[args].resolution)
     },
     [api]
-  )
+)
 
   return (
     <div className="contraller-right-bar">
@@ -76,25 +77,26 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
           </Bar>
         </>
       )}
-
+      {isPalette && (<ColorPicker colorfilter={colorPicker}></ColorPicker>)}
       {isLive && isSwithRate && (
-        <Bar className={'ratioMenu'}>
-            <span class='ratioMenu-main'>{viewText}</span>
-            <ul class="ratioMenu-level">
+        <Bar className={'resolution-menu'}>
+            <span class='resolution-menu-main'>{viewText}</span>
+            <ul class="resolution-menu-level">
               {
                 Object.keys(ratioValue).map((item)=>(
-                  ratioValue[item].show && (<li class="ratioMenu-level-1" onClick={() => setRatio(item)}>{ratioValue[item].name}</li>) 
+                  ratioValue[item].show && (<li class="resolution-menu-level-1" onClick={() => setRatio(item)}>{ratioValue[item].name}</li>) 
                 ))
               }
             </ul>
         </Bar>
       )}
-
+      
       {snapshot && (
         <Bar>
           <IconFont title="截图" onClick={() => snapshot(api.snapshot())} type="lm-player-SearchBox" />
         </Bar>
       )}
+
       <Bar>
         <IconFont title={isfull ? '窗口' : '全屏'} onClick={fullscreen} type={isfull ? 'lm-player-ExitFull_Main' : 'lm-player-Full_Main'} />
       </Bar>
