@@ -74,13 +74,14 @@ function VideoMessage({ event, api }) {
 }
 
 export const NoSource = ({ install }) => {
-  const isPlus = sessionStorage.getItem('_TEMP_PLAY_CODE')
+  const _TEMP_PLAY_CODE = sessionStorage.getItem('_TEMP_PLAY_CODE')
   // const _TEMP_PLAY_PATH = sessionStorage.getItem('_TEMP_PLAY_PATH')
+  const _APP_PLAY_VERSION  = sessionStorage.getItem('_APP_PLAY_VERSION')
   const _TEMP_PLAY_PATH = window.BSConfig?.playerDownloadUrl || localStorage.getItem('ZVPlayerUrl')
   return (
     <div className="lm-player-message-mask lm-player-mask-loading-animation">
       <IconFont style={{ fontSize: 80 }} type="lm-player-PlaySource" title="请选择视频源"></IconFont>
-      {!isPlus && (
+      {_TEMP_PLAY_CODE == '20000' && (
         <a
           className="lm-player-message"
           target="_blank"
@@ -92,7 +93,7 @@ export const NoSource = ({ install }) => {
           请<span className="install-link">下载</span>播放插件
         </a>
       )}
-      {isPlus == '10001' && (
+      {_TEMP_PLAY_CODE == '10001' && (
         <a
           className="lm-player-message"
           target="_blank"
@@ -101,7 +102,7 @@ export const NoSource = ({ install }) => {
           download="ZVPlayer.exe"
           rel="noopener noreferrer"
         >
-          当前播放插件版本低，建议你升级最新版本<span className="install-link">{sessionStorage.getItem('_APP_PLAY_VERSION')}</span>
+          当前播放插件版本低，建议您升级最新版本<span className="install-link">{_APP_PLAY_VERSION}</span>
         </a>
       )}
     </div>

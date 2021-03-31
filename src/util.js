@@ -404,9 +404,9 @@ export function BASE64(input) {
 
 export function unicodeToBase64(s){
   if(window.btoa){
-    return window.btoa(s)
+    return window.btoa(s) +''
   }else{
-    return BASE64(s)
+    return BASE64(s) +''
   }
 }
 
@@ -468,7 +468,8 @@ export function installState(callback){
     callback && callback()
 }, function(method, url) {
   console.log('未安装插件！！！')
-  sessionStorage.setItem('_TEMP_PLAY_CODE','')
+  sessionStorage.setItem('_TEMP_PLAY_CODE','20000')
+  callback && callback()
 });
 }
 

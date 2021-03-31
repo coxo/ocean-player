@@ -79,9 +79,9 @@
           setLiveType("flv")
           liveInputRef.current.value = URL.createObjectURL(e.target.files[0])
         }
-        localStorage.setItem('PY_PLUS','{"mode":2,"decryptionMode":"&decryption=1","reloadTimer":10,"switchRate":true,"palette":true}')
+        localStorage.setItem('PY_PLUS','{"mode":1,"decryptionMode":"&decryption=1","reloadTimer":10,"switchRate":true,"palette":true}')
 
-        sessionStorage.setItem('_APP_PLAY_VERSION','v1.0.4')
+        sessionStorage.setItem('_APP_PLAY_VERSION','v1.0.8')
         function onVideoFn(obj){
           console.log('+++++'+obj.uuid)
         }

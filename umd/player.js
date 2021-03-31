@@ -1073,9 +1073,9 @@
   }
   function unicodeToBase64(s) {
     if (window.btoa) {
-      return window.btoa(s);
+      return window.btoa(s) + '';
     } else {
-      return BASE64(s);
+      return BASE64(s) + '';
     }
   }
   /**
@@ -1141,7 +1141,8 @@
       callback && callback();
     }, function (method, url) {
       console.log('未安装插件！！！');
-      sessionStorage.setItem('_TEMP_PLAY_CODE', '');
+      sessionStorage.setItem('_TEMP_PLAY_CODE', '20000');
+      callback && callback();
     });
   }
   /**
@@ -2037,7 +2038,10 @@
   }) => {
     var _window$BSConfig;
 
-    const isPlus = sessionStorage.getItem('_TEMP_PLAY_CODE'); // const _TEMP_PLAY_PATH = sessionStorage.getItem('_TEMP_PLAY_PATH')
+    const _TEMP_PLAY_CODE = sessionStorage.getItem('_TEMP_PLAY_CODE'); // const _TEMP_PLAY_PATH = sessionStorage.getItem('_TEMP_PLAY_PATH')
+
+
+    const _APP_PLAY_VERSION = sessionStorage.getItem('_APP_PLAY_VERSION');
 
     const _TEMP_PLAY_PATH = ((_window$BSConfig = window.BSConfig) === null || _window$BSConfig === void 0 ? void 0 : _window$BSConfig.playerDownloadUrl) || localStorage.getItem('ZVPlayerUrl');
 
@@ -2049,7 +2053,7 @@
       },
       type: "lm-player-PlaySource",
       title: "\u8BF7\u9009\u62E9\u89C6\u9891\u6E90"
-    }), !isPlus && /*#__PURE__*/React__default['default'].createElement("a", {
+    }), _TEMP_PLAY_CODE == '20000' && /*#__PURE__*/React__default['default'].createElement("a", {
       className: "lm-player-message",
       target: "_blank",
       href: _TEMP_PLAY_PATH,
@@ -2061,7 +2065,7 @@
       rel: "noopener noreferrer"
     }, "\u8BF7", /*#__PURE__*/React__default['default'].createElement("span", {
       className: "install-link"
-    }, "\u4E0B\u8F7D"), "\u64AD\u653E\u63D2\u4EF6"), isPlus == '10001' && /*#__PURE__*/React__default['default'].createElement("a", {
+    }, "\u4E0B\u8F7D"), "\u64AD\u653E\u63D2\u4EF6"), _TEMP_PLAY_CODE == '10001' && /*#__PURE__*/React__default['default'].createElement("a", {
       className: "lm-player-message",
       target: "_blank",
       href: _TEMP_PLAY_PATH,
@@ -2071,9 +2075,9 @@
       },
       download: "ZVPlayer.exe",
       rel: "noopener noreferrer"
-    }, "\u5F53\u524D\u64AD\u653E\u63D2\u4EF6\u7248\u672C\u4F4E\uFF0C\u5EFA\u8BAE\u4F60\u5347\u7EA7\u6700\u65B0\u7248\u672C", /*#__PURE__*/React__default['default'].createElement("span", {
+    }, "\u5F53\u524D\u64AD\u653E\u63D2\u4EF6\u7248\u672C\u4F4E\uFF0C\u5EFA\u8BAE\u60A8\u5347\u7EA7\u6700\u65B0\u7248\u672C", /*#__PURE__*/React__default['default'].createElement("span", {
       className: "install-link"
-    }, sessionStorage.getItem('_APP_PLAY_VERSION'))));
+    }, _APP_PLAY_VERSION)));
   };
 
   function TineLine$1({
