@@ -60,6 +60,7 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
       screenNum: screenNum,
       playeMode : detectorPlayeMode(),
       deviceInfo: deviceInfo,
+      stream : 0
     };
     let isInit = false;
     const formartType = getVideoType(file);
@@ -110,12 +111,9 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
         hideContrallerBar={props.hideContrallerBar}
         errorReloadTimer={props.errorReloadTimer}
         scale={props.scale}
-        switchResolution={(resolution)=>{
-          setResolution(resolution)
-        }}
-        colorPicker={(value)=>{
-          setColorPicker(value)
-        }}
+        switchResolution={(resolution)=>{setResolution(resolution)}}
+        colorPicker={(value)=>{setColorPicker(value)}}
+        stream={props.stream}
         snapshot={props.snapshot}
         leftExtContents={props.leftExtContents}
         leftMidExtContents={props.leftMidExtContents}
@@ -143,13 +141,14 @@ function VideoTools({
   errorReloadTimer,
   install,
   colorPicker,
+  stream,
 }) {
   if (!playerObj) {
     return <NoSource install={install}/>;
   }
   return (
     <>
-      <VideoMessage api={playerObj.api} event={playerObj.event} />
+      <VideoMessage api={playerObj.api} event={playerObj.event} stream={stream} />
       {draggable && <DragEvent playContainer={playerObj.playContainer} api={playerObj.api} event={playerObj.event} />}
       {!hideContrallerBar && (
         <ContrallerEvent event={playerObj.event} playContainer={playerObj.playContainer}>

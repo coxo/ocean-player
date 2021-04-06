@@ -83,8 +83,9 @@ function TineLine({ event, api, visibel, historyList, playIndex, seekTo, default
           {lineList.map((v, i) => {
             const currentSizeLine = lineList.filter((v, i2) => i2 < i).map((v) => v.size)
             const currentIndexSize = currentSizeLine.length === 0 ? 0 : currentSizeLine.length > 1 ? currentSizeLine.reduce((p, c) => p + c) : currentSizeLine[0]
+            const currentSize = v.size || 0
             return (
-              <div className={`history-time-line-item ${v.disabled ? 'history-time-line-disabled' : ''}`} key={i} style={{ width: `${v.size}%`, left: `${currentIndexSize}%` }} />
+              <div className={`history-time-line-item ${v.disabled ? 'history-time-line-disabled' : ''}`} key={i} style={{ width: `${currentSize}%`, left: `${currentIndexSize}%` }} />
             )
           })}
         </>

@@ -187,3 +187,67 @@
     display: block;
   }
 }
+
+.colorPicker-container{
+.ant-slider {
+  box-sizing: border-box;
+  color: rgba(0,0,0,.85);
+  font-size: 14px;
+  font-variant: tabular-nums;
+  line-height: 1.5715;
+  list-style: none;
+  font-feature-settings: "tnum";
+  position: relative;
+  height: 12px;
+  margin: 10px 6px;
+  padding: 4px 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.ant-slider-rail, .ant-slider-track {
+  position: absolute;
+  height: 4px;
+  border-radius: 2px;
+  transition: background-color .3s;
+}
+
+.ant-slider-rail {
+  width: 100%;
+  background-color: #f5f5f5;
+}
+.ant-slider-track {
+  background-color: #91d5ff;
+}
+
+.ant-slider:hover .ant-slider-track {
+  background-color: #69c0ff;
+}
+.ant-slider-step {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: 0 0;
+}
+
+.ant-slider-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  background-color: #fff;
+  border: 2px solid #91d5ff;
+  border-radius: 50%;
+  box-shadow: 0;
+  cursor: pointer;
+  transition: border-color .3s,box-shadow .6s,transform .3s cubic-bezier(.18,.89,.32,1.28);
+}
+
+.ant-slider-mark {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  font-size: 14px;
+}
+}

@@ -10,12 +10,13 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
 
   // 获取视频分辨率
   const ratioValue = getVideoRatio()
-  // 默认
+  // 分辨率-默认显示
   const [viewText, setViewText] = useState(findVideoAttribute(api.getResolution(),'name'));
 
+  // 控制调色盘显示
   const isPalette = getGlobalCache(GL_CACHE.PT) || false
+  // 控制分辨率显示
   const isSwithRate = getGlobalCache(GL_CACHE.SR) || false
-
 
   useEffect(() => {
     const update = () => setDep(Date.now())
@@ -57,9 +58,7 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
   const setRatio = useCallback((...args) => {
       setViewText(ratioValue[args].name)
       switchResolution(ratioValue[args].resolution)
-    },
-    [api]
-)
+    },[api])
 
   return (
     <div className="contraller-right-bar">

@@ -23,6 +23,7 @@ function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, mu
 
   const rate = useMemo(() => getScreenRate(screenNum), [screenNum]);
   const [resolution, setResolution] = useState(rate);
+  const [colorPicker, setColorPicker] = useState(null);
 
   const file = useMemo(() => {
     let url;
@@ -145,7 +146,7 @@ function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, mu
   return (
     <div className={`lm-player-container ${className}`} ref={playContainerRef}>
       <div className="player-mask-layout">
-        <video autoPlay={autoPlay} preload={preload} muted={muted} poster={poster} controls={false} playsInline={playsinline} loop={loop} />
+        <video autoPlay={autoPlay} preload={preload} muted={muted} poster={poster} controls={false} playsInline={playsinline} loop={loop} style={colorPicker} />
       </div>
       <VideoTools
         defaultTime={defaultSeekTime}
@@ -155,6 +156,7 @@ function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, mu
         errorReloadTimer={props.errorReloadTimer}
         scale={props.scale}
         snapshot={props.snapshot}
+        colorPicker={(value)=>{setColorPicker(value)}}
         leftExtContents={props.leftExtContents}
         leftMidExtContents={props.leftMidExtContents}
         rightExtContents={props.rightExtContents}
@@ -190,6 +192,7 @@ function VideoTools({
   seekTo,
   playIndex,
   defaultTime,
+  colorPicker
 }) {
   if (!playerObj) {
     return <NoSource />;
@@ -205,6 +208,7 @@ function VideoTools({
             event={playerObj.event}
             playContainer={playerObj.playContainer}
             video={playerObj.video}
+            colorPicker={colorPicker}
             snapshot={snapshot}
             rightExtContents={rightExtContents}
             rightMidExtContents={rightMidExtContents}
@@ -258,7 +262,6 @@ HistoryPlayer.propTypes = {
   className: PropTypes.string,
   playsinline: PropTypes.bool,
   children: PropTypes.any,
-  autoplay: PropTypes.bool,
   rightExtContents: PropTypes.element,
   rightMidExtContents: PropTypes.element,
   leftExtContents: PropTypes.element,

@@ -35,7 +35,7 @@ function ColorPicker({ playContainer, api, colorfilter }) {
    }, [hueValue]);
 
   const handleAllChange = data => {
-    colorfilter({
+    colorfilter && colorfilter({
         '-webkit-filter': `${brightness} ${contrast} ${saturate} ${hue}`,
     })
   }

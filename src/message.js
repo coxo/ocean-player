@@ -3,7 +3,7 @@ import IconFont from './iconfont'
 import EventName from './event/eventName'
 import './style/message.less'
 
-function VideoMessage({ event, api }) {
+function VideoMessage({ event, api , stream}) {
   const [state, setState] = useState({ status: null, errorTimer: null, loading: false })
 
   const message = useMemo(() => {
@@ -25,7 +25,7 @@ function VideoMessage({ event, api }) {
     const openStartLoading = () => setState((old) => ({ ...old, loading: true }))
     const openWaitLoading = () => setState((old) => ({ ...old }))
     const openSeekLoading = () => setState((old) => ({ ...old, loading: true }))
-
+    const canplayLoading = () => (setState((old) => ({ ...old, loading: false })), stream = 1)
     const closeLoading = () => setState((old) => ({ ...old, loading: false }))
     const errorReload = (timer) => setState(() => ({ status: 'reload', errorTimer: timer, loading: true }))
     const reloadFail = () => setState((old) => ({ ...old, status: 'fail', loading: false }))
@@ -37,7 +37,7 @@ function VideoMessage({ event, api }) {
     event.addEventListener('waiting', openWaitLoading)
     event.addEventListener('seeking', openSeekLoading)
     event.addEventListener('loadeddata', closeLoading)
-    event.addEventListener('canplay', closeLoading)
+    event.addEventListener('canplay', canplayLoading)
     event.on(EventName.ERROR_RELOAD, errorReload)
     event.on(EventName.RELOAD_FAIL, reloadFail)
     event.on(EventName.RELOAD_SUCCESS, reloadSuccess)
@@ -50,7 +50,7 @@ function VideoMessage({ event, api }) {
       event.removeEventListener('waiting', openWaitLoading)
       event.removeEventListener('seeking', openSeekLoading)
       event.removeEventListener('loadeddata', closeLoading)
-      event.removeEventListener('canplay', closeLoading)
+      event.removeEventListener('canplay', canplayLoading)
       event.off(EventName.ERROR_RELOAD, errorReload)
       event.off(EventName.RELOAD_FAIL, reloadFail)
       event.off(EventName.RELOAD_SUCCESS, reloadSuccess)

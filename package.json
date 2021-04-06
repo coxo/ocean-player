@@ -1,6 +1,6 @@
 {
   "name": "ocean-player",
-  "version": "0.2.45",
+  "version": "0.2.46",
   "description": "video for html5 support flv m3u8",
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
   "main": "es/player.js",
   "dependencies": {
     "aes-js": "^3.1.2",
+    "babel-plugin-import": "^1.13.3",
     "flv.zv.js": "^2.2.0",
     "hls.js": "^0.12.4",
     "prop-types": "^15.7.2"

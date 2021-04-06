@@ -1633,7 +1633,7 @@
     }, [hueValue]);
 
     const handleAllChange = data => {
-      colorfilter({
+      colorfilter && colorfilter({
         '-webkit-filter': `${brightness} ${contrast} ${saturate} ${hue}`
       });
     };
@@ -1723,10 +1723,12 @@
   }) {
     const [dep, setDep] = React.useState(Date.now()); // 获取视频分辨率
 
-    const ratioValue = getVideoRatio(); // 默认
+    const ratioValue = getVideoRatio(); // 分辨率-默认显示
 
-    const [viewText, setViewText] = React.useState(findVideoAttribute(api.getResolution(), 'name'));
-    const isPalette = getGlobalCache(GL_CACHE.PT) || false;
+    const [viewText, setViewText] = React.useState(findVideoAttribute(api.getResolution(), 'name')); // 控制调色盘显示
+
+    const isPalette = getGlobalCache(GL_CACHE.PT) || false; // 控制分辨率显示
+
     const isSwithRate = getGlobalCache(GL_CACHE.SR) || false;
     React.useEffect(() => {
       const update = () => setDep(Date.now());
@@ -1928,7 +1930,8 @@
 
   function VideoMessage({
     event,
-    api
+    api,
+    stream
   }) {
     const [state, setState] = React.useState({
       status: null,
@@ -1964,6 +1967,10 @@
         loading: true
       }));
 
+      const canplayLoading = () => (setState(old => ({ ...old,
+        loading: false
+      })), stream = 1);
+
       const closeLoading = () => setState(old => ({ ...old,
         loading: false
       }));
@@ -1998,7 +2005,7 @@
       event.addEventListener('waiting', openWaitLoading);
       event.addEventListener('seeking', openSeekLoading);
       event.addEventListener('loadeddata', closeLoading);
-      event.addEventListener('canplay', closeLoading);
+      event.addEventListener('canplay', canplayLoading);
       event.on(EventName.ERROR_RELOAD, errorReload);
       event.on(EventName.RELOAD_FAIL, reloadFail);
       event.on(EventName.RELOAD_SUCCESS, reloadSuccess);
@@ -2010,7 +2017,7 @@
         event.removeEventListener('waiting', openWaitLoading);
         event.removeEventListener('seeking', openSeekLoading);
         event.removeEventListener('loadeddata', closeLoading);
-        event.removeEventListener('canplay', closeLoading);
+        event.removeEventListener('canplay', canplayLoading);
         event.off(EventName.ERROR_RELOAD, errorReload);
         event.off(EventName.RELOAD_FAIL, reloadFail);
         event.off(EventName.RELOAD_SUCCESS, reloadSuccess);
@@ -2367,7 +2374,8 @@
       flv,
       hls,
       resolution,
-      screenNum
+      screenNum,
+      stream
     }) {
       this.player = video;
       this.playContainer = playContainer;
@@ -2379,7 +2387,9 @@
 
       this.resolution = resolution; // 分屏数 其他模式为空
 
-      this.screenNum = screenNum || 0;
+      this.screenNum = screenNum || 0; // 开流状态 0 失败/未开流  1 开流成功
+
+      this.stream = stream;
     }
     /**
      * 播放器销毁后 动态跟新api下的flv，hls对象
@@ -2757,7 +2767,8 @@
         cancelFullScreen: this.cancelFullScreen.bind(this),
         __player: this.player,
         flv: this.flv,
-        hls: this.hls
+        hls: this.hls,
+        stream: this.stream
       };
     }
 
@@ -2904,7 +2915,8 @@
         resolution: resolution,
         screenNum: screenNum,
         playeMode: detectorPlayeMode(),
-        deviceInfo: deviceInfo
+        deviceInfo: deviceInfo,
+        stream: 0
       };
       let isInit = false;
       const formartType = getVideoType(file);
@@ -2985,6 +2997,7 @@
       colorPicker: value => {
         setColorPicker(value);
       },
+      stream: props.stream,
       snapshot: props.snapshot,
       leftExtContents: props.leftExtContents,
       leftMidExtContents: props.leftMidExtContents,
@@ -3008,7 +3021,8 @@
     rightMidExtContents,
     errorReloadTimer,
     install,
-    colorPicker
+    colorPicker,
+    stream
   }) {
     if (!playerObj) {
       return /*#__PURE__*/React__default['default'].createElement(NoSource, {
@@ -3018,7 +3032,8 @@
 
     return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, /*#__PURE__*/React__default['default'].createElement(VideoMessage, {
       api: playerObj.api,
-      event: playerObj.event
+      event: playerObj.event,
+      stream: stream
     }), draggable && /*#__PURE__*/React__default['default'].createElement(DragEvent, {
       playContainer: playerObj.playContainer,
       api: playerObj.api,
@@ -3242,11 +3257,12 @@
     }, /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, lineList.map((v, i) => {
       const currentSizeLine = lineList.filter((v, i2) => i2 < i).map(v => v.size);
       const currentIndexSize = currentSizeLine.length === 0 ? 0 : currentSizeLine.length > 1 ? currentSizeLine.reduce((p, c) => p + c) : currentSizeLine[0];
+      const currentSize = v.size || 0;
       return /*#__PURE__*/React__default['default'].createElement("div", {
         className: `history-time-line-item ${v.disabled ? 'history-time-line-disabled' : ''}`,
         key: i,
         style: {
-          width: `${v.size}%`,
+          width: `${currentSize}%`,
           left: `${currentIndexSize}%`
         }
       });
@@ -3317,6 +3333,7 @@
     const defaultSeekTime = React.useMemo(() => playStatus[1], [playStatus]);
     const rate = React.useMemo(() => getScreenRate(screenNum), [screenNum]);
     const [resolution, setResolution] = React.useState(rate);
+    const [colorPicker, setColorPicker] = React.useState(null);
     const file = React.useMemo(() => {
       let url;
 
@@ -3457,7 +3474,8 @@
       poster: poster,
       controls: false,
       playsInline: playsinline,
-      loop: loop
+      loop: loop,
+      style: colorPicker
     })), /*#__PURE__*/React__default['default'].createElement(VideoTools, {
       defaultTime: defaultSeekTime,
       playerObj: playerObj,
@@ -3466,6 +3484,9 @@
       errorReloadTimer: props.errorReloadTimer,
       scale: props.scale,
       snapshot: props.snapshot,
+      colorPicker: value => {
+        setColorPicker(value);
+      },
       leftExtContents: props.leftExtContents,
       leftMidExtContents: props.leftMidExtContents,
       rightExtContents: props.rightExtContents,
@@ -3497,7 +3518,8 @@
     historyList,
     seekTo,
     playIndex,
-    defaultTime
+    defaultTime,
+    colorPicker
   }) {
     if (!playerObj) {
       return /*#__PURE__*/React__default['default'].createElement(NoSource, null);
@@ -3518,6 +3540,7 @@
       event: playerObj.event,
       playContainer: playerObj.playContainer,
       video: playerObj.video,
+      colorPicker: colorPicker,
       snapshot: snapshot,
       rightExtContents: rightExtContents,
       rightMidExtContents: rightMidExtContents,
@@ -3571,7 +3594,6 @@
     className: PropTypes__default['default'].string,
     playsinline: PropTypes__default['default'].bool,
     children: PropTypes__default['default'].any,
-    autoplay: PropTypes__default['default'].bool,
     rightExtContents: PropTypes__default['default'].element,
     rightMidExtContents: PropTypes__default['default'].element,
     leftExtContents: PropTypes__default['default'].element,
