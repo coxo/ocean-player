@@ -1905,7 +1905,7 @@ function ContrallerEvent({
 function VideoMessage({
   event,
   api,
-  stream
+  setStreamState
 }) {
   const [state, setState] = useState({
     status: null,
@@ -1943,7 +1943,7 @@ function VideoMessage({
 
     const canplayLoading = () => (setState(old => ({ ...old,
       loading: false
-    })), stream = 1);
+    })), setStreamState && setStreamState(1));
 
     const closeLoading = () => setState(old => ({ ...old,
       loading: false
@@ -2011,7 +2011,7 @@ function VideoMessage({
     className: `${loading && status !== 'fail' ? 'lm-player-loading-animation' : status === 'fail' ? 'lm-player-loadfail' : ''} lm-player-loading-icon`
   }), /*#__PURE__*/React.createElement("span", {
     className: "lm-player-message"
-  }, message), /*#__PURE__*/React.createElement("div", null));
+  }, message));
 }
 
 const NoSource = ({
@@ -2034,8 +2034,10 @@ const NoSource = ({
     },
     type: "lm-player-PlaySource",
     title: "\u8BF7\u9009\u62E9\u89C6\u9891\u6E90"
-  }), _TEMP_PLAY_CODE == '20000' && /*#__PURE__*/React.createElement("a", {
-    className: "lm-player-message",
+  }), _TEMP_PLAY_CODE == '20000' && /*#__PURE__*/React.createElement("span", {
+    className: "lm-player-message"
+  }, "\u8BF7", /*#__PURE__*/React.createElement("a", {
+    className: "install-link",
     target: "_blank",
     href: _TEMP_PLAY_PATH,
     style: {
@@ -2044,10 +2046,9 @@ const NoSource = ({
     },
     download: "ZVPlayer.exe",
     rel: "noopener noreferrer"
-  }, "\u8BF7", /*#__PURE__*/React.createElement("span", {
-    className: "install-link"
-  }, "\u4E0B\u8F7D"), "\u64AD\u653E\u63D2\u4EF6"), _TEMP_PLAY_CODE == '10001' && /*#__PURE__*/React.createElement("a", {
-    className: "lm-player-message",
+  }, "\u4E0B\u8F7D"), "\u64AD\u653E\u63D2\u4EF6"), _TEMP_PLAY_CODE == '10001' && /*#__PURE__*/React.createElement("span", {
+    className: "lm-player-message"
+  }, "\u5F53\u524D\u64AD\u653E\u63D2\u4EF6\u7248\u672C\u4F4E\uFF0C\u5EFA\u8BAE\u60A8\u5347\u7EA7\u6700\u65B0\u7248\u672C", /*#__PURE__*/React.createElement("a", {
     target: "_blank",
     href: _TEMP_PLAY_PATH,
     style: {
@@ -2055,8 +2056,7 @@ const NoSource = ({
       textDecoration: 'none'
     },
     download: "ZVPlayer.exe",
-    rel: "noopener noreferrer"
-  }, "\u5F53\u524D\u64AD\u653E\u63D2\u4EF6\u7248\u672C\u4F4E\uFF0C\u5EFA\u8BAE\u60A8\u5347\u7EA7\u6700\u65B0\u7248\u672C", /*#__PURE__*/React.createElement("span", {
+    rel: "noopener noreferrer",
     className: "install-link"
   }, _APP_PLAY_VERSION)));
 };
@@ -2716,6 +2716,10 @@ class Api {
     lcStore.setStreamResolution(ratio);
   }
 
+  changeStream(stream) {
+    this.stream = stream;
+  }
+
   getApi() {
     return {
       play: this.play.bind(this),
@@ -2742,7 +2746,8 @@ class Api {
       __player: this.player,
       flv: this.flv,
       hls: this.hls,
-      stream: this.stream
+      stream: this.stream,
+      changeStream: this.changeStream.bind(this)
     };
   }
 
@@ -2843,7 +2848,6 @@ function SinglePlayer({
   children,
   onInitPlayer,
   screenNum,
-  onVideoFn,
   deviceInfo,
   ...props
 }) {
@@ -2854,17 +2858,17 @@ function SinglePlayer({
   const rate = useMemo(() => getScreenRate(screenNum), [screenNum]);
   const [resolution, setResolution] = useState(rate);
   const [colorPicker, setColorPicker] = useState(null);
-  const [install, setInstall] = useState(false);
+  const [install, setInstall] = useState(false); // 开流状态 0 失败/未开流  1 开流成功
+
+  const [streamState, setStreamState] = useState(0);
   installState(function () {
     setInstall(true);
   });
 
   function onToken(token) {
-    if (onVideoFn) {
-      onVideoFn({
-        uuid: token
-      });
-    }
+    props.onVideoFn && props.onVideoFn({
+      uuid: token
+    });
   }
 
   useEffect(() => () => {
@@ -2943,6 +2947,11 @@ function SinglePlayer({
       onInitPlayer(Object.assign({}, playerObject.api.getApi(), playerObject.event.getApi()));
     }
   }, [file, resolution]);
+  useEffect(() => {
+    props.onStreamMounted && props.onStreamMounted({
+      streamState
+    });
+  }, [streamState]);
   return /*#__PURE__*/React.createElement("div", {
     className: `lm-player-container ${className}`,
     ref: playContainerRef
@@ -2971,7 +2980,7 @@ function SinglePlayer({
     colorPicker: value => {
       setColorPicker(value);
     },
-    stream: props.stream,
+    setStreamState: setStreamState,
     snapshot: props.snapshot,
     leftExtContents: props.leftExtContents,
     leftMidExtContents: props.leftMidExtContents,
@@ -2996,7 +3005,7 @@ function VideoTools$1({
   errorReloadTimer,
   install,
   colorPicker,
-  stream
+  setStreamState
 }) {
   if (!playerObj) {
     return /*#__PURE__*/React.createElement(NoSource, {
@@ -3007,7 +3016,7 @@ function VideoTools$1({
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(VideoMessage, {
     api: playerObj.api,
     event: playerObj.event,
-    stream: stream
+    setStreamState: setStreamState
   }), draggable && /*#__PURE__*/React.createElement(DragEvent, {
     playContainer: playerObj.playContainer,
     api: playerObj.api,

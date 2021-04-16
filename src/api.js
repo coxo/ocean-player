@@ -296,6 +296,11 @@ export default class Api {
   exeRatioCommand(ratio){
     lcStore.setStreamResolution(ratio)
   }
+
+  changeStream(stream){
+    this.stream = stream
+  }
+
   getApi() {
     return {
       play: this.play.bind(this),
@@ -322,7 +327,8 @@ export default class Api {
       __player: this.player,
       flv: this.flv,
       hls: this.hls,
-      stream: this.stream
+      stream: this.stream,
+      changeStream: this.changeStream.bind(this),
     }
   }
 }

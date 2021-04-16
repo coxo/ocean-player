@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState,useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import VideoEvent from './event';
 import { getVideoType, createFlvPlayer, createHlsPlayer,detectorPlayeMode,tansCodingToUrl, getScreenRate, installState } from './util';
 import ContrallerBar from './contraller_bar';
@@ -12,7 +12,7 @@ import LiveHeart from './live_heart';
 import PropTypes from 'prop-types';
 import './style/index.less';
 
-function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum, onVideoFn,deviceInfo, ...props }) {
+function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum,deviceInfo, ...props }) {
   const playContainerRef = useRef(null);
   const [playerObj, setPlayerObj] = useState(null);
   const playerRef = useRef(null);
@@ -20,21 +20,21 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
   const rate = useMemo(() => getScreenRate(screenNum), [screenNum]);
   const [resolution, setResolution] = useState(rate);
 
-
   const [colorPicker, setColorPicker] = useState(null);
 
   const [install, setInstall] = useState(false);
+
+  // 开流状态 0 失败/未开流  1 开流成功
+  const [streamState, setStreamState] = useState(0);
 
   installState(function(){
     setInstall(true)
   })
 
   function onToken(token){
-    if(onVideoFn){
-      onVideoFn({
-        uuid: token
-      })
-    }
+    props.onVideoFn && props.onVideoFn({
+      uuid: token
+    })
   }
 
   useEffect(
@@ -44,7 +44,7 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
       }
       if (playerRef.current && playerRef.current.api) {
         playerRef.current.api.destroy();
-      }
+      } 
       playerRef.current = null;
     },
     [file,resolution]
@@ -98,6 +98,11 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
       onInitPlayer(Object.assign({}, playerObject.api.getApi(), playerObject.event.getApi()));
     }
   }, [file,resolution]);
+
+  useEffect(() => {
+    props.onStreamMounted && props.onStreamMounted({streamState})
+  }, [streamState]);
+
   return (
     <div className={`lm-player-container ${className}`} ref={playContainerRef}>
       <div className="player-mask-layout">
@@ -111,9 +116,13 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
         hideContrallerBar={props.hideContrallerBar}
         errorReloadTimer={props.errorReloadTimer}
         scale={props.scale}
-        switchResolution={(resolution)=>{setResolution(resolution)}}
-        colorPicker={(value)=>{setColorPicker(value)}}
-        stream={props.stream}
+        switchResolution={(resolution) => {
+          setResolution(resolution)
+        }}
+        colorPicker={(value) => {
+          setColorPicker(value)
+        }}
+        setStreamState={setStreamState}
         snapshot={props.snapshot}
         leftExtContents={props.leftExtContents}
         leftMidExtContents={props.leftMidExtContents}
@@ -123,7 +132,7 @@ function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinl
       />
       {children}
     </div>
-  );
+  )
 }
 
 function VideoTools({
@@ -141,14 +150,14 @@ function VideoTools({
   errorReloadTimer,
   install,
   colorPicker,
-  stream,
+  setStreamState,
 }) {
   if (!playerObj) {
     return <NoSource install={install}/>;
   }
   return (
     <>
-      <VideoMessage api={playerObj.api} event={playerObj.event} stream={stream} />
+      <VideoMessage api={playerObj.api} event={playerObj.event} setStreamState={setStreamState}/>
       {draggable && <DragEvent playContainer={playerObj.playContainer} api={playerObj.api} event={playerObj.event} />}
       {!hideContrallerBar && (
         <ContrallerEvent event={playerObj.event} playContainer={playerObj.playContainer}>

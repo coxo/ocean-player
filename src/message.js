@@ -3,7 +3,7 @@ import IconFont from './iconfont'
 import EventName from './event/eventName'
 import './style/message.less'
 
-function VideoMessage({ event, api , stream}) {
+function VideoMessage({ event, api , setStreamState}) {
   const [state, setState] = useState({ status: null, errorTimer: null, loading: false })
 
   const message = useMemo(() => {
@@ -25,7 +25,7 @@ function VideoMessage({ event, api , stream}) {
     const openStartLoading = () => setState((old) => ({ ...old, loading: true }))
     const openWaitLoading = () => setState((old) => ({ ...old }))
     const openSeekLoading = () => setState((old) => ({ ...old, loading: true }))
-    const canplayLoading = () => (setState((old) => ({ ...old, loading: false })), stream = 1)
+    const canplayLoading = () => (setState((old) => ({ ...old, loading: false })), setStreamState && setStreamState(1))
     const closeLoading = () => setState((old) => ({ ...old, loading: false }))
     const errorReload = (timer) => setState(() => ({ status: 'reload', errorTimer: timer, loading: true }))
     const reloadFail = () => setState((old) => ({ ...old, status: 'fail', loading: false }))
@@ -68,7 +68,6 @@ function VideoMessage({ event, api , stream}) {
         className={`${loading && status !== 'fail' ? 'lm-player-loading-animation' : status === 'fail' ? 'lm-player-loadfail' : ''} lm-player-loading-icon`}
       />
       <span className="lm-player-message">{message}</span>
-      <div></div>
     </div>
   )
 }
@@ -82,28 +81,30 @@ export const NoSource = ({ install }) => {
     <div className="lm-player-message-mask lm-player-mask-loading-animation">
       <IconFont style={{ fontSize: 80 }} type="lm-player-PlaySource" title="请选择视频源"></IconFont>
       {_TEMP_PLAY_CODE == '20000' && (
-        <a
+        <span
           className="lm-player-message"
-          target="_blank"
-          href={_TEMP_PLAY_PATH}
-          style={{ pointerEvents: 'all', textDecoration: 'none' }}
-          download="ZVPlayer.exe"
-          rel="noopener noreferrer"
         >
-          请<span className="install-link">下载</span>播放插件
-        </a>
+          请
+          <a className="install-link"
+            target="_blank"
+            href={_TEMP_PLAY_PATH}
+            style={{ pointerEvents: 'all', textDecoration: 'none' }}
+            download="ZVPlayer.exe"
+            rel="noopener noreferrer"
+          >下载</a>播放插件
+        </span>
       )}
       {_TEMP_PLAY_CODE == '10001' && (
-        <a
+        <span
           className="lm-player-message"
-          target="_blank"
+        >
+          当前播放插件版本低，建议您升级最新版本
+          <a target="_blank"
           href={_TEMP_PLAY_PATH}
           style={{ pointerEvents: 'all', textDecoration: 'none' }}
           download="ZVPlayer.exe"
-          rel="noopener noreferrer"
-        >
-          当前播放插件版本低，建议您升级最新版本<span className="install-link">{_APP_PLAY_VERSION}</span>
-        </a>
+          rel="noopener noreferrer"className="install-link">{_APP_PLAY_VERSION}</a>
+        </span>
       )}
     </div>
   )
