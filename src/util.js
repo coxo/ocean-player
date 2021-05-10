@@ -1,40 +1,21 @@
 import flvjs from 'flv.zv.js'
 import * as Hls from 'hls.js'
 import httpx from './service/httpx'
-import lcStore from "./service/url/lcStore";
-const hostUrl = 'http://127.0.0.1';
-/**
- * 全局配置
- * decryptionMode： 是否加密
- * switchRate：码率切换控制
- */
- export const GL_CACHE = {
-  DM :'decryptionMode',
-  SR :'switchRate',
-  PT :'palette',
-}
+import lcStore from './service/url/lcStore';
+import {default as BASE64} from './base64';
 
-/**
- * 客户端插件模式，随机端口
- */
-export const LOCAL_PORT = ["15080", "15081", "15082", "15083", "15084", "15085", "15086", "15087", "15088", "15089"]
+import {hostUrl, GL_CACHE, LOCAL_PORT, PLAY_CODE, PY_M_CC_NAME , VIDEO_RESOLUTION} from './constant'
 
-export const PLAY_CODE = {
-  '10000': '', 
-  '10100': '版本需要更新',
-  '10200': '插件初始化异常',
-  '12000': '插件不存在',
-}
+window.zvpalyer = window.zvpalyer || {}
 
 export function findVideoAttribute(val, kv) {
-  const ens = getVideoRatio()
+  const ens = VIDEO_RESOLUTION
   for(const key in ens){
     if(ens[key]['resolution'] == val){
       return ens[key][kv]
     }
   }
 }
-
 
 /**
  * 创建HLS对象
@@ -87,15 +68,22 @@ export function createFlvPlayer(video, options) {
           cors: true,
           seekType: 'range',
           isLive: options.isLive || true,
-          // headers:{
-          //   "Access-Control-Allow-Origin":"*"
-          // }
         },
         flvConfig
       )
     )
     player.attachMediaElement(video)
     player.load()
+
+    // 日志配置
+    flvjs.LoggingControl.enableError = window.zvpalyer.logError === false ? false : true
+    flvjs.LoggingControl.enableWarn = window.zvpalyer.logWarn || false
+    flvjs.LoggingControl.enableVerbose = window.zvpalyer.logDebug || false
+    flvjs.LoggingControl.enableDebug = window.zvpalyer.logDebug || false
+    flvjs.LoggingControl.enableInfo = window.zvpalyer.logDebug || false
+    flvjs.LoggingControl.forceGlobalTag = true
+    flvjs.LoggingControl.globalTag = "ocean-player"
+
     return player
   }
 }
@@ -302,25 +290,13 @@ export function JSONP(url){
   return tid.join('');
 }
 
-/**
- * 获取视频分辨率
- */
- export function getVideoRatio() {
-  return {
-    '1': { value: '1920*1080', name: '超清', resolution:'1080p', bitrate:'2M',show: true},
-    '2': { value: '1280*720', name: '高清', resolution:'720p', bitrate:'2M',show: true},
-    '3': { value: '640*360', name: '标清', resolution:'360p', bitrate:'500K',show: true},
-    '4': { value: '640*480', name: '标清', resolution:'480p', bitrate:'1M',show: false},
-    '5': { value: '', name: '原始', resolution: '', bitrate:'',show: true},
-  }
-}
 
 /**
  * 根据分屏获取对应的分辨率
  * 默认 960*544
  */
  export function getScreenRate(num){
-  const videoRatio = getVideoRatio()
+  const videoRatio = VIDEO_RESOLUTION
   // 1、4、6、8、9、10、13、16
   if(num < 4){
     return videoRatio['5'].resolution
@@ -347,67 +323,11 @@ export function JSONP(url){
   try {
     playerOptions = JSON.parse(strS);
   } catch (error) {
-    console.error('播放配置出错，请检查浏览器本地存储PY_PLUS！')
+    console.error(PY_M_CC_NAME)
     return ''
   }
 
   return playerOptions ? playerOptions[key] : ''
-}
-
-export function BASE64(input) {  
-  // private property  
-  let _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";  
-
-  function _utf8_encode(string) {  
-    string = string.replace(/\r\n/g,"\n");  
-    var utftext = "";  
-    for (var n = 0; n < string.length; n++) {  
-        var c = string.charCodeAt(n);  
-        if (c < 128) {  
-            utftext += String.fromCharCode(c);  
-        } else if((c > 127) && (c < 2048)) {  
-            utftext += String.fromCharCode((c >> 6) | 192);  
-            utftext += String.fromCharCode((c & 63) | 128);  
-        } else {  
-            utftext += String.fromCharCode((c >> 12) | 224);  
-            utftext += String.fromCharCode(((c >> 6) & 63) | 128);  
-            utftext += String.fromCharCode((c & 63) | 128);  
-        }  
-    }  
-    return utftext;
-  }  
-
-  // public method for encoding  
-  var output = "";  
-  var chr1, chr2, chr3, enc1, enc2, enc3, enc4;  
-  var i = 0;  
-  input = _utf8_encode(input);  
-  while (i < input.length) {  
-      chr1 = input.charCodeAt(i++);  
-      chr2 = input.charCodeAt(i++);  
-      chr3 = input.charCodeAt(i++);  
-      enc1 = chr1 >> 2;  
-      enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);  
-      enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);  
-      enc4 = chr3 & 63;  
-      if (isNaN(chr2)) {  
-        enc3 = enc4 = 64;  
-      } else if (isNaN(chr3)) {  
-        enc4 = 64;  
-      }  
-      output = output +  
-      _keyStr.charAt(enc1) + _keyStr.charAt(enc2) +  
-      _keyStr.charAt(enc3) + _keyStr.charAt(enc4);  
-  }  
-  return output;  
-}
-
-export function unicodeToBase64(s){
-  if(window.btoa){
-    return window.btoa(s) +''
-  }else{
-    return BASE64(s) +''
-  }
 }
 
 /**
@@ -500,12 +420,9 @@ export function tansCodingToUrl(player, onToken){
 
   const url_info ={
       port: getLocalPort(),
-      pull_uri: unicodeToBase64(file)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','-')
+      pull_uri: BASE64.encode(file)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','-')
   }
   // 分辨率，如果为空，为原始分辨率
-  if(resolution){
-    param1 = '&resolution=' + resolution
-  }
 
   param2 = '&token=' + key
 
