@@ -4062,7 +4062,7 @@ var Transmuxer = function () {
         key: '_onMediaInfo',
         value: function _onMediaInfo(mediaInfo) {
             var _this5 = this;
-
+            console.info('@@@@@@@@@@@@@')
             Promise.resolve().then(function () {
                 if (_this5._emitter != null) {
                     _this5._emitter.emit(_transmuxingEvents2.default.MEDIA_INFO, mediaInfo);
@@ -10174,12 +10174,14 @@ var FlvPlayer = function () {
             var _this = this;
 
             if (event === _playerEvents2.default.MEDIA_INFO) {
+                console.info('MEDIA_INFO==>', this._mediaInfo)
                 if (this._mediaInfo != null) {
                     Promise.resolve().then(function () {
                         _this._emitter.emit(_playerEvents2.default.MEDIA_INFO, _this.mediaInfo);
                     });
                 }
             } else if (event === _playerEvents2.default.STATISTICS_INFO) {
+                console.info('MEDIA_INFO==>', this._statisticsInfo)
                 if (this._statisticsInfo != null) {
                     Promise.resolve().then(function () {
                         _this._emitter.emit(_playerEvents2.default.STATISTICS_INFO, _this.statisticsInfo);

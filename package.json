@@ -1,6 +1,6 @@
 {
   "name": "ocean-player",
-  "version": "0.2.48",
+  "version": "0.3.0",
   "description": "video for html5 support flv m3u8",
   "repository": {
     "type": "git",

@@ -32,6 +32,24 @@
   var PropTypes__default = /*#__PURE__*/_interopDefaultLegacy(PropTypes);
   var ReactDOM__default = /*#__PURE__*/_interopDefaultLegacy(ReactDOM);
 
+  function _extends() {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+
+      return target;
+    };
+
+    return _extends.apply(this, arguments);
+  }
+
   class VideoEventInstance {
     constructor(video) {
       this.video = video;
@@ -651,6 +669,258 @@
     }
   };
 
+  var BASE64_MAPPING = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'];
+  var URLSAFE_BASE64_MAPPING = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'];
+
+  var _toBinary = function (ascii) {
+    var binary = [];
+
+    while (ascii > 0) {
+      var b = ascii % 2;
+      ascii = Math.floor(ascii / 2);
+      binary.push(b);
+    }
+
+    binary.reverse();
+    return binary;
+  };
+
+  var _toDecimal = function (binary) {
+    var dec = 0;
+    var p = 0;
+
+    for (var i = binary.length - 1; i >= 0; --i) {
+      var b = binary[i];
+
+      if (b == 1) {
+        dec += Math.pow(2, p);
+      }
+
+      ++p;
+    }
+
+    return dec;
+  };
+
+  var _toUTF8Binary = function (c, binaryArray) {
+    var mustLen = 8 - (c + 1) + (c - 1) * 6;
+    var fatLen = binaryArray.length;
+    var diff = mustLen - fatLen;
+
+    while (--diff >= 0) {
+      binaryArray.unshift(0);
+    }
+
+    var binary = [];
+    var _c = c;
+
+    while (--_c >= 0) {
+      binary.push(1);
+    }
+
+    binary.push(0);
+    var i = 0,
+        len = 8 - (c + 1);
+
+    for (; i < len; ++i) {
+      binary.push(binaryArray[i]);
+    }
+
+    for (var j = 0; j < c - 1; ++j) {
+      binary.push(1);
+      binary.push(0);
+      var sum = 6;
+
+      while (--sum >= 0) {
+        binary.push(binaryArray[i++]);
+      }
+    }
+
+    return binary;
+  };
+
+  var _toBinaryArray = function (str) {
+    var binaryArray = [];
+
+    for (var i = 0, len = str.length; i < len; ++i) {
+      var unicode = str.charCodeAt(i);
+
+      var _tmpBinary = _toBinary(unicode);
+
+      if (unicode < 0x80) {
+        var _tmpdiff = 8 - _tmpBinary.length;
+
+        while (--_tmpdiff >= 0) {
+          _tmpBinary.unshift(0);
+        }
+
+        binaryArray = binaryArray.concat(_tmpBinary);
+      } else if (unicode >= 0x80 && unicode <= 0x7FF) {
+        binaryArray = binaryArray.concat(_toUTF8Binary(2, _tmpBinary));
+      } else if (unicode >= 0x800 && unicode <= 0xFFFF) {
+        //UTF-8 3byte
+        binaryArray = binaryArray.concat(_toUTF8Binary(3, _tmpBinary));
+      } else if (unicode >= 0x10000 && unicode <= 0x1FFFFF) {
+        //UTF-8 4byte
+        binaryArray = binaryArray.concat(_toUTF8Binary(4, _tmpBinary));
+      } else if (unicode >= 0x200000 && unicode <= 0x3FFFFFF) {
+        //UTF-8 5byte
+        binaryArray = binaryArray.concat(_toUTF8Binary(5, _tmpBinary));
+      } else if (unicode >= 4000000 && unicode <= 0x7FFFFFFF) {
+        //UTF-8 6byte
+        binaryArray = binaryArray.concat(_toUTF8Binary(6, _tmpBinary));
+      }
+    }
+
+    return binaryArray;
+  };
+
+  var _toUnicodeStr = function (binaryArray) {
+    var unicode;
+    var unicodeBinary = [];
+    var str = "";
+
+    for (var i = 0, len = binaryArray.length; i < len;) {
+      if (binaryArray[i] == 0) {
+        unicode = _toDecimal(binaryArray.slice(i, i + 8));
+        str += String.fromCharCode(unicode);
+        i += 8;
+      } else {
+        var sum = 0;
+
+        while (i < len) {
+          if (binaryArray[i] == 1) {
+            ++sum;
+          } else {
+            break;
+          }
+
+          ++i;
+        }
+
+        unicodeBinary = unicodeBinary.concat(binaryArray.slice(i + 1, i + 8 - sum));
+        i += 8 - sum;
+
+        while (sum > 1) {
+          unicodeBinary = unicodeBinary.concat(binaryArray.slice(i + 2, i + 8));
+          i += 8;
+          --sum;
+        }
+
+        unicode = _toDecimal(unicodeBinary);
+        str += String.fromCharCode(unicode);
+        unicodeBinary = [];
+      }
+    }
+
+    return str;
+  };
+
+  var _encode = function (str, url_safe) {
+    var base64_Index = [];
+
+    var binaryArray = _toBinaryArray(str);
+
+    var dictionary = url_safe ? URLSAFE_BASE64_MAPPING : BASE64_MAPPING;
+    var extra_Zero_Count = 0;
+
+    for (var i = 0, len = binaryArray.length; i < len; i += 6) {
+      var diff = i + 6 - len;
+
+      if (diff == 2) {
+        extra_Zero_Count = 2;
+      } else if (diff == 4) {
+        extra_Zero_Count = 4;
+      }
+
+      var _tmpExtra_Zero_Count = extra_Zero_Count;
+
+      while (--_tmpExtra_Zero_Count >= 0) {
+        binaryArray.push(0);
+      }
+
+      base64_Index.push(_toDecimal(binaryArray.slice(i, i + 6)));
+    }
+
+    var base64 = '';
+
+    for (var i = 0, len = base64_Index.length; i < len; ++i) {
+      base64 += dictionary[base64_Index[i]];
+    }
+
+    for (var i = 0, len = extra_Zero_Count / 2; i < len; ++i) {
+      base64 += '=';
+    }
+
+    return base64;
+  };
+
+  var _decode = function (_base64Str, url_safe) {
+    var _len = _base64Str.length;
+    var extra_Zero_Count = 0;
+    var dictionary = url_safe ? URLSAFE_BASE64_MAPPING : BASE64_MAPPING;
+
+    if (_base64Str.charAt(_len - 1) == '=') {
+      if (_base64Str.charAt(_len - 2) == '=') {
+        //两个等号说明补了4个0
+        extra_Zero_Count = 4;
+        _base64Str = _base64Str.substring(0, _len - 2);
+      } else {
+        //一个等号说明补了2个0
+        extra_Zero_Count = 2;
+        _base64Str = _base64Str.substring(0, _len - 1);
+      }
+    }
+
+    var binaryArray = [];
+
+    for (var i = 0, len = _base64Str.length; i < len; ++i) {
+      var c = _base64Str.charAt(i);
+
+      for (var j = 0, size = dictionary.length; j < size; ++j) {
+        if (c == dictionary[j]) {
+          var _tmp = _toBinary(j);
+          /*不足6位的补0*/
+
+
+          var _tmpLen = _tmp.length;
+
+          if (6 - _tmpLen > 0) {
+            for (var k = 6 - _tmpLen; k > 0; --k) {
+              _tmp.unshift(0);
+            }
+          }
+
+          binaryArray = binaryArray.concat(_tmp);
+          break;
+        }
+      }
+    }
+
+    if (extra_Zero_Count > 0) {
+      binaryArray = binaryArray.slice(0, binaryArray.length - extra_Zero_Count);
+    }
+
+    var str = _toUnicodeStr(binaryArray);
+
+    return str;
+  };
+
+  var __BASE64 = {
+    encode: function (str) {
+      return _encode(str, false);
+    },
+    decode: function (base64Str) {
+      return _decode(base64Str, false);
+    },
+    urlsafe_encode: function (str) {
+      return _encode(str, true);
+    },
+    urlsafe_decode: function (base64Str) {
+      return _decode(base64Str, true);
+    }
+  };
+
   const hostUrl = 'http://127.0.0.1';
   /**
    * 全局配置
@@ -668,8 +938,52 @@
    */
 
   const LOCAL_PORT = ["15080", "15081", "15082", "15083", "15084", "15085", "15086", "15087", "15088", "15089"];
+  /**
+   * 获取视频分辨率
+   */
+
+  const VIDEO_RESOLUTION = {
+    '1': {
+      value: '1920*1080',
+      name: '超清',
+      resolution: '1080p',
+      bitrate: '2M',
+      show: true
+    },
+    '2': {
+      value: '1280*720',
+      name: '高清',
+      resolution: '720p',
+      bitrate: '2M',
+      show: true
+    },
+    '3': {
+      value: '640*360',
+      name: '标清',
+      resolution: '360p',
+      bitrate: '500K',
+      show: true
+    },
+    '4': {
+      value: '640*480',
+      name: '标清',
+      resolution: '480p',
+      bitrate: '1M',
+      show: false
+    },
+    '5': {
+      value: '',
+      name: '原始',
+      resolution: '',
+      bitrate: '',
+      show: true
+    }
+  };
+  const PY_M_CC_NAME = '播放配置出错，请检查浏览器本地存储PY_PLUS！';
+
+  window.zvpalyer = window.zvpalyer || {};
   function findVideoAttribute(val, kv) {
-    const ens = getVideoRatio();
+    const ens = VIDEO_RESOLUTION;
 
     for (const key in ens) {
       if (ens[key]['resolution'] == val) {
@@ -724,13 +1038,18 @@
         stashInitialSize: 128,
         cors: true,
         seekType: 'range',
-        isLive: options.isLive || true // headers:{
-        //   "Access-Control-Allow-Origin":"*"
-        // }
-
+        isLive: options.isLive || true
       }, flvConfig));
       player.attachMediaElement(video);
-      player.load();
+      player.load(); // 日志配置
+
+      flvjs__default['default'].LoggingControl.enableError = window.zvpalyer.logError === false ? false : true;
+      flvjs__default['default'].LoggingControl.enableWarn = window.zvpalyer.logWarn || false;
+      flvjs__default['default'].LoggingControl.enableVerbose = window.zvpalyer.logDebug || false;
+      flvjs__default['default'].LoggingControl.enableDebug = window.zvpalyer.logDebug || false;
+      flvjs__default['default'].LoggingControl.enableInfo = window.zvpalyer.logDebug || false;
+      flvjs__default['default'].LoggingControl.forceGlobalTag = true;
+      flvjs__default['default'].LoggingControl.globalTag = "ocean-player";
       return player;
     }
   }
@@ -939,55 +1258,12 @@
     return tid.join('');
   }
   /**
-   * 获取视频分辨率
-   */
-
-  function getVideoRatio() {
-    return {
-      '1': {
-        value: '1920*1080',
-        name: '超清',
-        resolution: '1080p',
-        bitrate: '2M',
-        show: true
-      },
-      '2': {
-        value: '1280*720',
-        name: '高清',
-        resolution: '720p',
-        bitrate: '2M',
-        show: true
-      },
-      '3': {
-        value: '640*360',
-        name: '标清',
-        resolution: '360p',
-        bitrate: '500K',
-        show: true
-      },
-      '4': {
-        value: '640*480',
-        name: '标清',
-        resolution: '480p',
-        bitrate: '1M',
-        show: false
-      },
-      '5': {
-        value: '',
-        name: '原始',
-        resolution: '',
-        bitrate: '',
-        show: true
-      }
-    };
-  }
-  /**
    * 根据分屏获取对应的分辨率
    * 默认 960*544
    */
 
   function getScreenRate(num) {
-    const videoRatio = getVideoRatio(); // 1、4、6、8、9、10、13、16
+    const videoRatio = VIDEO_RESOLUTION; // 1、4、6、8、9、10、13、16
 
     if (num < 4) {
       return videoRatio['5'].resolution;
@@ -1013,70 +1289,11 @@
     try {
       playerOptions = JSON.parse(strS);
     } catch (error) {
-      console.error('播放配置出错，请检查浏览器本地存储PY_PLUS！');
+      console.error(PY_M_CC_NAME);
       return '';
     }
 
     return playerOptions ? playerOptions[key] : '';
-  }
-  function BASE64(input) {
-    // private property  
-    let _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
-    function _utf8_encode(string) {
-      string = string.replace(/\r\n/g, "\n");
-      var utftext = "";
-
-      for (var n = 0; n < string.length; n++) {
-        var c = string.charCodeAt(n);
-
-        if (c < 128) {
-          utftext += String.fromCharCode(c);
-        } else if (c > 127 && c < 2048) {
-          utftext += String.fromCharCode(c >> 6 | 192);
-          utftext += String.fromCharCode(c & 63 | 128);
-        } else {
-          utftext += String.fromCharCode(c >> 12 | 224);
-          utftext += String.fromCharCode(c >> 6 & 63 | 128);
-          utftext += String.fromCharCode(c & 63 | 128);
-        }
-      }
-
-      return utftext;
-    } // public method for encoding  
-
-
-    var output = "";
-    var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
-    var i = 0;
-    input = _utf8_encode(input);
-
-    while (i < input.length) {
-      chr1 = input.charCodeAt(i++);
-      chr2 = input.charCodeAt(i++);
-      chr3 = input.charCodeAt(i++);
-      enc1 = chr1 >> 2;
-      enc2 = (chr1 & 3) << 4 | chr2 >> 4;
-      enc3 = (chr2 & 15) << 2 | chr3 >> 6;
-      enc4 = chr3 & 63;
-
-      if (isNaN(chr2)) {
-        enc3 = enc4 = 64;
-      } else if (isNaN(chr3)) {
-        enc4 = 64;
-      }
-
-      output = output + _keyStr.charAt(enc1) + _keyStr.charAt(enc2) + _keyStr.charAt(enc3) + _keyStr.charAt(enc4);
-    }
-
-    return output;
-  }
-  function unicodeToBase64(s) {
-    if (window.btoa) {
-      return window.btoa(s) + '';
-    } else {
-      return BASE64(s) + '';
-    }
   }
   /**
    * 随机获取端口号
@@ -1154,7 +1371,7 @@
    */
 
   function tansCodingToUrl(player, onToken) {
-    var _unicodeToBase, _unicodeToBase$replac, _unicodeToBase$replac2;
+    var _BASE64$encode, _BASE64$encode$replac, _BASE64$encode$replac2;
 
     let param1 = '';
     let param2 = '';
@@ -1172,12 +1389,8 @@
     file = file + getGlobalCache(GL_CACHE.DM);
     const url_info = {
       port: getLocalPort(),
-      pull_uri: (_unicodeToBase = unicodeToBase64(file)) === null || _unicodeToBase === void 0 ? void 0 : (_unicodeToBase$replac = _unicodeToBase.replaceAll('=', '')) === null || _unicodeToBase$replac === void 0 ? void 0 : (_unicodeToBase$replac2 = _unicodeToBase$replac.replaceAll('/', '_')) === null || _unicodeToBase$replac2 === void 0 ? void 0 : _unicodeToBase$replac2.replaceAll('+', '-')
+      pull_uri: (_BASE64$encode = __BASE64.encode(file)) === null || _BASE64$encode === void 0 ? void 0 : (_BASE64$encode$replac = _BASE64$encode.replaceAll('=', '')) === null || _BASE64$encode$replac === void 0 ? void 0 : (_BASE64$encode$replac2 = _BASE64$encode$replac.replaceAll('/', '_')) === null || _BASE64$encode$replac2 === void 0 ? void 0 : _BASE64$encode$replac2.replaceAll('+', '-')
     }; // 分辨率，如果为空，为原始分辨率
-
-    if (resolution) {
-      param1 = '&resolution=' + resolution;
-    }
 
     param2 = '&token=' + key; // 免责工具使用
 
@@ -1196,24 +1409,6 @@
 
     console.log(file + param1 + param3 + param4);
     return lcStore$1.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3 + param4;
-  }
-
-  function _extends() {
-    _extends = Object.assign || function (target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-
-        for (var key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            target[key] = source[key];
-          }
-        }
-      }
-
-      return target;
-    };
-
-    return _extends.apply(this, arguments);
   }
 
   function IconFont({
@@ -1723,7 +1918,7 @@
   }) {
     const [dep, setDep] = React.useState(Date.now()); // 获取视频分辨率
 
-    const ratioValue = getVideoRatio(); // 分辨率-默认显示
+    const ratioValue = VIDEO_RESOLUTION; // 分辨率-默认显示
 
     const [viewText, setViewText] = React.useState(findVideoAttribute(api.getResolution(), 'name')); // 控制调色盘显示
 
@@ -1742,11 +1937,11 @@
 
       if (isFullScreen) {
         api.requestFullScreen();
-        switchResolution('');
+        switchResolution && switchResolution('');
         setViewText(findVideoAttribute('', 'name'));
       } else {
         api.cancelFullScreen();
-        switchResolution(getScreenRate(api.getCurrentScreen()));
+        switchResolution && switchResolution(getScreenRate(api.getCurrentScreen()));
         setViewText(findVideoAttribute(getScreenRate(api.getCurrentScreen()), 'name'));
       } // 设置对应的分辨率名称
 
@@ -1764,7 +1959,7 @@
     }, [api, playContainer]);
     const setRatio = React.useCallback((...args) => {
       setViewText(ratioValue[args].name);
-      switchResolution(ratioValue[args].resolution);
+      switchResolution && switchResolution(ratioValue[args].resolution);
     }, [api]);
     return /*#__PURE__*/React__default['default'].createElement("div", {
       className: "contraller-right-bar"
@@ -1783,13 +1978,13 @@
     }))), isPalette && /*#__PURE__*/React__default['default'].createElement(ColorPicker, {
       colorfilter: colorPicker
     }), isLive && isSwithRate && /*#__PURE__*/React__default['default'].createElement(Bar, {
-      className: 'resolution-menu'
+      className: 'fl-menu'
     }, /*#__PURE__*/React__default['default'].createElement("span", {
-      class: "resolution-menu-main"
+      class: "fl-menu-main"
     }, viewText), /*#__PURE__*/React__default['default'].createElement("ul", {
-      class: "resolution-menu-level"
+      class: "fl-menu-level"
     }, Object.keys(ratioValue).map(item => ratioValue[item].show && /*#__PURE__*/React__default['default'].createElement("li", {
-      class: "resolution-menu-level-1",
+      class: "fl-menu-level-1",
       onClick: () => setRatio(item)
     }, ratioValue[item].name)))), snapshot && /*#__PURE__*/React__default['default'].createElement(Bar, null, /*#__PURE__*/React__default['default'].createElement(IconFont, {
       title: "\u622A\u56FE",
@@ -2169,70 +2364,58 @@
     }));
   }
 
-  function ErrorEvent({
-    event,
+  function ErrorEvent$1({
     api,
-    errorReloadTimer,
+    event,
     flv,
     hls,
-    changePlayIndex,
-    isHistory,
-    playIndex
+    errorNoticeHandle
   }) {
-    const [errorTimer, setErrorTime] = React.useState(0);
     const errorInfo = React.useRef(null);
-    const reloadTimer = React.useRef(null);
+    /**
+      * 流播放，出错情况捕获
+      * @param  {...any} args 
+      * @returns 
+    */
+
+    const errorHandle = (...args) => {
+      console.error(...args);
+
+      if (args[2] && args[2].msg && args[2].msg.includes('Unsupported audio')) {
+        return;
+      }
+
+      if (args[1] && args[1].details && (args[1].details.includes("bufferStalledError") || args[1].details.includes("bufferNudgeOnStall") || args[1].details.includes("bufferSeekOverHole") || args[1].details.includes("bufferAddCodecError"))) {
+        return;
+      }
+
+      errorInfo.current = args;
+      api.unload();
+      errorNoticeHandle && errorNoticeHandle();
+    };
+
     React.useEffect(() => {
-      const errorHandle = (...args) => {
-        if (args[2] && args[2].msg && args[2].msg.includes('Unsupported audio')) {
-          return;
-        }
-
-        if (args[1] && args[1].details && (args[1].details.includes("bufferStalledError") || args[1].details.includes("bufferNudgeOnStall") || args[1].details.includes("bufferSeekOverHole") || args[1].details.includes("bufferAddCodecError"))) {
-          return;
-        }
-
-        console.error(...args);
-        errorInfo.current = args;
-        setErrorTime(errorTimer + 1);
-      };
-
-      const reloadSuccess = () => {
-        if (errorTimer > 0) {
-          console.warn('视频重连成功！');
-          event.emit(EventName.RELOAD_SUCCESS);
-          api.success();
-          clearErrorTimer();
-        }
-      };
-
-      const clearErrorTimer = () => setErrorTime(0);
-
       try {
         if (flv) {
           flv.on('error', errorHandle);
+          flv.on('media_source_buffer_full', errorHandle);
+          flv.on('media_source_ended', errorHandle);
         }
 
         if (hls) {
           hls.on('hlsError', errorHandle);
         }
-      } catch (e) {//
+      } catch (e) {
+        console.warn(e);
       }
 
-      if (isHistory) {
-        //历史视频切换播放索引时清除错误次数
-        event.on(EventName.CHANGE_PLAY_INDEX, clearErrorTimer); //历史视频主动清除错误次数
-
-        event.on(EventName.CLEAR_ERROR_TIMER, clearErrorTimer);
-      }
-
-      event.addEventListener('error', errorHandle, false); //获取video状态清除错误状态
-
-      event.addEventListener('canplay', reloadSuccess, false);
+      event.addEventListener('error', errorHandle, false);
       return () => {
         try {
           if (flv) {
             flv.off('error', errorHandle);
+            flv.off('media_source_buffer_full', errorHandle);
+            flv.off('media_source_ended', errorHandle);
           }
 
           if (hls) {
@@ -2242,35 +2425,9 @@
           console.warn(e);
         }
 
-        if (isHistory) {
-          event.off(EventName.CHANGE_PLAY_INDEX, clearErrorTimer);
-          event.off(EventName.CLEAR_ERROR_TIMER, clearErrorTimer);
-        }
-
         event.removeEventListener('error', errorHandle, false);
-        event.removeEventListener('canplay', reloadSuccess, false);
       };
-    }, [event, flv, hls, errorTimer]);
-    React.useEffect(() => {
-      if (errorTimer === 0) {
-        return;
-      }
-
-      if (errorTimer > errorReloadTimer) {
-        isHistory ? changePlayIndex(playIndex + 1) : event.emit(EventName.RELOAD_FAIL);
-        api.unload();
-        return;
-      }
-
-      console.warn(`视频播放出错，正在进行重连${errorTimer}`);
-      reloadTimer.current = setTimeout(() => {
-        event.emit(EventName.ERROR_RELOAD, errorTimer, ...errorInfo.current);
-        api.reload(true);
-      }, 2 * 1000);
-      return () => {
-        clearTimeout(reloadTimer.current);
-      };
-    }, [errorTimer, api, event, flv, hls]);
+    }, [event, flv, hls]);
     return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null);
   }
 
@@ -2461,7 +2618,8 @@
       this.hls = null;
       this.event = null;
       this.scale = null;
-      this.position = null;
+      this.position = null; // this.playbackRate = 1
+
       console.warn('destroy', index);
     }
     /**
@@ -2745,6 +2903,25 @@
     changeStream(stream) {
       this.stream = stream;
     }
+    /**
+    * 设置播放速率
+    * @param {*} rate
+    */
+
+
+    setPlaybackRate(rate) {
+      this.playbackRate = rate;
+      this.player && (this.player.playbackRate = rate);
+    }
+
+    restPlayRate() {
+      console.info(this.playbackRate);
+      this.player.playbackRate = this.playbackRate;
+    }
+
+    getPlayerIng() {
+      return this.player.playbackRate;
+    }
 
     getApi() {
       return {
@@ -2773,7 +2950,9 @@
         flv: this.flv,
         hls: this.hls,
         stream: this.stream,
-        changeStream: this.changeStream.bind(this)
+        changeStream: this.changeStream.bind(this),
+        restPlayRate: this.restPlayRate.bind(this),
+        getPlayerIng: this.getPlayerIng.bind(this)
       };
     }
 
@@ -2861,7 +3040,123 @@
     return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null);
   }
 
-  function SinglePlayer({
+  const CountContext = /*#__PURE__*/React.createContext(12);
+
+  const ReConnection = ({
+    connectHandle
+  }) => {
+    const {
+      connectCount,
+      connectStatus,
+      children
+    } = React.useContext(CountContext);
+    return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, /*#__PURE__*/React__default['default'].createElement("div", {
+      className: 'lm-player-container lm-c-player-component ocean-error'
+    }, /*#__PURE__*/React__default['default'].createElement("div", {
+      className: "player-mask-layout"
+    }, /*#__PURE__*/React__default['default'].createElement("video", null)), children, /*#__PURE__*/React__default['default'].createElement("div", {
+      className: "lm-player-message-mask lm-player-mask-loading-animation"
+    }, connectStatus !== 2 ? /*#__PURE__*/React__default['default'].createElement("span", {
+      className: "lm-player-message",
+      style: {
+        fontSize: 24
+      }
+    }, "\u7B2C", connectCount, "\u6B21\u8FDE\u63A5\u4E2D\uFF0C\u8BF7\u7A0D\u5019...") : /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, /*#__PURE__*/React__default['default'].createElement(IconFont, {
+      style: {
+        fontSize: 68,
+        color: '#DBE1EA'
+      },
+      type: 'lm-player-M_Device_jiazaishibai'
+    }), /*#__PURE__*/React__default['default'].createElement("span", {
+      className: "lm-player-message"
+    }, "\u8FDE\u63A5\u5931\u8D25", /*#__PURE__*/React__default['default'].createElement("span", {
+      className: "refresh-action",
+      onClick: () => connectHandle()
+    }, "\u5237\u65B0\u91CD\u8BD5"))))));
+  };
+  /**
+   * 播放控件容器
+   * @param {*} param0 
+   * @returns 
+   */
+
+
+  function SinglePlayer({ ...props
+  }) {
+    const [connectStatus, setConnectStatus] = React.useState(1);
+    const connectCount = React.useRef(0);
+    const timer = React.useRef(null);
+    const playerStatus = React.useRef(0);
+    React.useEffect(() => {
+      return () => {
+        timer && clearTimeout(timer);
+      };
+    }, []);
+
+    const setConnectCount = count => {
+      connectCount.current = count;
+    };
+
+    const reconnectHandle = () => {
+      setConnectCount(0);
+      setConnectStatus(1);
+    };
+
+    const updateStatus = status => {
+      playerStatus.current = status;
+    };
+
+    return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, connectStatus == 1 ? /*#__PURE__*/React__default['default'].createElement(ZPlayer, _extends({
+      errorNoticeHandle: () => {
+        console.warn('开流状态记录....' + playerStatus.current);
+
+        if (playerStatus.current == 0) {
+          console.warn('首次开流失败！');
+          setConnectStatus(2);
+          return;
+        }
+
+        if (playerStatus.current == 1) {
+          setConnectCount(0);
+          updateStatus(2);
+        }
+
+        console.warn('开流连接次数....' + connectCount.current);
+        const currentStatus = props.errorReloadTimer > connectCount.current;
+
+        if (currentStatus) {
+          setConnectCount(connectCount.current + 1);
+          setConnectStatus(0); // 开启定时器-更新连接状态
+
+          timer.current = setTimeout(() => {
+            // 连接状态重置为可连接状态
+            setConnectStatus(1);
+          }, 1000 * 1);
+        } else {
+          // 结束连接
+          setConnectStatus(2);
+        }
+      }
+    }, props, {
+      onStreamMounted: data => {
+        if (data.streamState == 1) {
+          updateStatus(1);
+        }
+
+        props.onStreamMounted && props.onStreamMounted(data);
+      }
+    })) : /*#__PURE__*/React__default['default'].createElement(CountContext.Provider, {
+      value: {
+        connectStatus,
+        connectCount: connectCount.current,
+        children: props.errorExtContents
+      }
+    }, /*#__PURE__*/React__default['default'].createElement(ReConnection, {
+      connectHandle: () => reconnectHandle()
+    })));
+  }
+
+  function ZPlayer({
     type,
     file,
     className,
@@ -2887,9 +3182,6 @@
     const [install, setInstall] = React.useState(false); // 开流状态 0 失败/未开流  1 开流成功
 
     const [streamState, setStreamState] = React.useState(0);
-    installState(function () {
-      setInstall(true);
-    });
 
     function onToken(token) {
       props.onVideoFn && props.onVideoFn({
@@ -2974,6 +3266,9 @@
       }
     }, [file, resolution]);
     React.useEffect(() => {
+      installState(function () {
+        setInstall(true);
+      });
       props.onStreamMounted && props.onStreamMounted({
         streamState
       });
@@ -2989,6 +3284,8 @@
       muted: muted,
       poster: poster,
       controls: false,
+      crossorigin: "Anonymous",
+      usecors: true,
       playsInline: playsinline,
       loop: loop,
       style: colorPicker
@@ -2998,7 +3295,6 @@
       key: file,
       install: install,
       hideContrallerBar: props.hideContrallerBar,
-      errorReloadTimer: props.errorReloadTimer,
       scale: props.scale,
       switchResolution: resolution => {
         setResolution(resolution);
@@ -3012,7 +3308,8 @@
       leftMidExtContents: props.leftMidExtContents,
       rightExtContents: props.rightExtContents,
       rightMidExtContents: props.rightMidExtContents,
-      draggable: props.draggable
+      draggable: props.draggable,
+      errorNoticeHandle: props.errorNoticeHandle
     }), children);
   }
 
@@ -3028,10 +3325,10 @@
     leftMidExtContents,
     rightExtContents,
     rightMidExtContents,
-    errorReloadTimer,
     install,
     colorPicker,
-    setStreamState
+    setStreamState,
+    errorNoticeHandle
   }) {
     if (!playerObj) {
       return /*#__PURE__*/React__default['default'].createElement(NoSource, {
@@ -3068,12 +3365,12 @@
     }), !isLive && /*#__PURE__*/React__default['default'].createElement(TineLine$1, {
       api: playerObj.api,
       event: playerObj.event
-    })), /*#__PURE__*/React__default['default'].createElement(ErrorEvent, {
+    })), /*#__PURE__*/React__default['default'].createElement(ErrorEvent$1, {
       flv: playerObj.flv,
       hls: playerObj.hls,
       api: playerObj.api,
       event: playerObj.event,
-      errorReloadTimer: errorReloadTimer
+      errorNoticeHandle: errorNoticeHandle
     }), isLive && /*#__PURE__*/React__default['default'].createElement(LiveHeart, {
       api: playerObj.api
     }));
@@ -3292,6 +3589,111 @@
     visibel: PropTypes__default['default'].bool
   };
 
+  function ErrorEvent({
+    event,
+    api,
+    errorReloadTimer,
+    flv,
+    hls,
+    changePlayIndex,
+    isHistory,
+    playIndex
+  }) {
+    const [errorTimer, setErrorTime] = React.useState(0);
+    const errorInfo = React.useRef(null);
+    const reloadTimer = React.useRef(null);
+    React.useEffect(() => {
+      const errorHandle = (...args) => {
+        if (args[2] && args[2].msg && args[2].msg.includes('Unsupported audio')) {
+          return;
+        }
+
+        if (args[1] && args[1].details && (args[1].details.includes("bufferStalledError") || args[1].details.includes("bufferNudgeOnStall") || args[1].details.includes("bufferSeekOverHole") || args[1].details.includes("bufferAddCodecError"))) {
+          return;
+        }
+
+        console.error(...args);
+        errorInfo.current = args;
+        setErrorTime(errorTimer + 1);
+      };
+
+      const reloadSuccess = () => {
+        if (errorTimer > 0) {
+          console.warn('视频重连成功！');
+          event.emit(EventName.RELOAD_SUCCESS);
+          api.success();
+          clearErrorTimer();
+        }
+      };
+
+      const clearErrorTimer = () => setErrorTime(0);
+
+      try {
+        if (flv) {
+          flv.on('error', errorHandle);
+        }
+
+        if (hls) {
+          hls.on('hlsError', errorHandle);
+        }
+      } catch (e) {//
+      }
+
+      if (isHistory) {
+        //历史视频切换播放索引时清除错误次数
+        event.on(EventName.CHANGE_PLAY_INDEX, clearErrorTimer); //历史视频主动清除错误次数
+
+        event.on(EventName.CLEAR_ERROR_TIMER, clearErrorTimer);
+      }
+
+      event.addEventListener('error', errorHandle, false); //获取video状态清除错误状态
+
+      event.addEventListener('canplay', reloadSuccess, false);
+      return () => {
+        try {
+          if (flv) {
+            flv.off('error', errorHandle);
+          }
+
+          if (hls) {
+            hls.off('hlsError', errorHandle);
+          }
+        } catch (e) {
+          console.warn(e);
+        }
+
+        if (isHistory) {
+          event.off(EventName.CHANGE_PLAY_INDEX, clearErrorTimer);
+          event.off(EventName.CLEAR_ERROR_TIMER, clearErrorTimer);
+        }
+
+        event.removeEventListener('error', errorHandle, false);
+        event.removeEventListener('canplay', reloadSuccess, false);
+      };
+    }, [event, flv, hls, errorTimer]);
+    React.useEffect(() => {
+      if (errorTimer === 0) {
+        return;
+      }
+
+      if (errorTimer > errorReloadTimer) {
+        isHistory ? changePlayIndex(playIndex + 1) : event.emit(EventName.RELOAD_FAIL);
+        api.unload();
+        return;
+      }
+
+      console.warn(`视频播放出错，正在进行重连${errorTimer}`);
+      reloadTimer.current = setTimeout(() => {
+        event.emit(EventName.ERROR_RELOAD, errorTimer, ...errorInfo.current);
+        api.reload(true);
+      }, 2 * 1000);
+      return () => {
+        clearTimeout(reloadTimer.current);
+      };
+    }, [errorTimer, api, event, flv, hls]);
+    return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null);
+  }
+
   /**
    * history下使用 用户切换下个播放地址
    */
@@ -3332,6 +3734,7 @@
     children,
     onInitPlayer,
     screenNum,
+    speed,
     ...props
   }) {
     const playContainerRef = React.useRef(null);
@@ -3400,7 +3803,9 @@
       if (!file) {
         changePlayIndex(playIndex + 1);
       }
-    }, [file, playIndex, historyList]);
+
+      file && playerObj && playerObj.api.setPlaybackRate(speed);
+    }, [file, playIndex, historyList, speed]);
     React.useEffect(() => () => {
       if (playerRef.current && playerRef.current.event) {
         playerRef.current.event.destroy();
@@ -3469,7 +3874,10 @@
           changePlayIndex,
           reload: reloadHistory
         }));
-      }
+      } // 倍数
+
+
+      playerObject.api.setPlaybackRate(speed);
     }, [historyList, file]);
     return /*#__PURE__*/React__default['default'].createElement("div", {
       className: `lm-player-container ${className}`,
@@ -3482,6 +3890,8 @@
       muted: muted,
       poster: poster,
       controls: false,
+      crossorigin: "Anonymous",
+      usecors: true,
       playsInline: playsinline,
       loop: loop,
       style: colorPicker
