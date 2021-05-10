@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import ContrallerBar from '../contraller_bar';
 import VideoMessage, { NoSource } from '../message';
 import HistoryTimeLine from './time_line_history';
-import ErrorEvent from './errorEvent';
+import ErrorEvent from '../event/errorEvent';
 import DragEvent from '../event/dragEvent';
 import Api from '../api';
 import VideoEvent from '../event';
@@ -13,7 +13,7 @@ import ContrallerEvent from '../event/contrallerEvent';
 import { getVideoType, createFlvPlayer, createHlsPlayer, tansCodingToUrl, getScreenRate  } from '../util';
 import { computedTimeAndIndex } from './utils';
 
-function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum, speed, ...props }) {
+function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum, ...props }) {
   const playContainerRef = useRef(null);
   const [playerObj, setPlayerObj] = useState(null);
   const playerRef = useRef(null);
@@ -87,10 +87,7 @@ function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, mu
     if (!file) {
       changePlayIndex(playIndex + 1);
     }
-
-    file && playerObj && playerObj.api.setPlaybackRate(speed)
-
-  }, [file, playIndex, historyList, speed]);
+  }, [file, playIndex, historyList]);
 
   useEffect(
     () => () => {
@@ -144,14 +141,12 @@ function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, mu
     if (onInitPlayer) {
       onInitPlayer(Object.assign({}, playerObject.api.getApi(), playerObject.event.getApi(), { seekTo, changePlayIndex, reload: reloadHistory }));
     }
-    // 倍数
-    playerObject.api.setPlaybackRate(speed)
   }, [historyList, file]);
 
   return (
     <div className={`lm-player-container ${className}`} ref={playContainerRef}>
       <div className="player-mask-layout">
-        <video autoPlay={autoPlay} preload={preload} muted={muted} poster={poster} controls={false} crossorigin={"Anonymous"} usecors={true} playsInline={playsinline} loop={loop} style={colorPicker} />
+        <video autoPlay={autoPlay} preload={preload} muted={muted} poster={poster} controls={false} playsInline={playsinline} loop={loop} style={colorPicker} />
       </div>
       <VideoTools
         defaultTime={defaultSeekTime}

@@ -74,7 +74,6 @@ export default class Api {
     this.event = null
     this.scale = null
     this.position = null
-    // this.playbackRate = 1
     console.warn('destroy', index)
   }
 
@@ -302,24 +301,6 @@ export default class Api {
     this.stream = stream
   }
 
-    /**
-   * 设置播放速率
-   * @param {*} rate
-   */
-  setPlaybackRate(rate) {
-    this.playbackRate = rate
-    this.player && (this.player.playbackRate = rate)
-  }
-
-  restPlayRate(){
-    console.info(this.playbackRate)
-    this.player.playbackRate = this.playbackRate
-  }
-
-  getPlayerIng(){
-    return this.player.playbackRate
-  }
-
   getApi() {
     return {
       play: this.play.bind(this),
@@ -348,8 +329,6 @@ export default class Api {
       hls: this.hls,
       stream: this.stream,
       changeStream: this.changeStream.bind(this),
-      restPlayRate: this.restPlayRate.bind(this),
-      getPlayerIng: this.getPlayerIng.bind(this),
     }
   }
 }

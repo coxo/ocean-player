@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import IconFont from '../iconfont'
 import Bar from './bar'
-import { isFullscreen, fullScreenListener, computedBound, findVideoAttribute, getScreenRate, getGlobalCache} from '../util'
-import {VIDEO_RESOLUTION, GL_CACHE} from '../constant'
+import { isFullscreen, fullScreenListener, computedBound, getVideoRatio, findVideoAttribute, getScreenRate, getGlobalCache, GL_CACHE } from '../util'
 import PropTypes from 'prop-types'
 import ColorPicker from './colorPicker'
 
@@ -10,7 +9,7 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
   const [dep, setDep] = useState(Date.now())
 
   // 获取视频分辨率
-  const ratioValue = VIDEO_RESOLUTION
+  const ratioValue = getVideoRatio()
   // 分辨率-默认显示
   const [viewText, setViewText] = useState(findVideoAttribute(api.getResolution(),'name'));
 
@@ -32,11 +31,11 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
     
     if(isFullScreen){
       api.requestFullScreen()
-      switchResolution && switchResolution('')
+      switchResolution('')
       setViewText(findVideoAttribute('','name'))
     }else{
       api.cancelFullScreen()
-      switchResolution && switchResolution(getScreenRate(api.getCurrentScreen()))
+      switchResolution(getScreenRate(api.getCurrentScreen()))
       setViewText(findVideoAttribute(getScreenRate(api.getCurrentScreen()),'name'))
     }
 
@@ -58,7 +57,7 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
 
   const setRatio = useCallback((...args) => {
       setViewText(ratioValue[args].name)
-      switchResolution && switchResolution(ratioValue[args].resolution)
+      switchResolution(ratioValue[args].resolution)
     },[api])
 
   return (
@@ -79,12 +78,12 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
       )}
       {isPalette && (<ColorPicker colorfilter={colorPicker}></ColorPicker>)}
       {isLive && isSwithRate && (
-        <Bar className={'fl-menu'}>
-            <span class='fl-menu-main'>{viewText}</span>
-            <ul class="fl-menu-level">
+        <Bar className={'resolution-menu'}>
+            <span class='resolution-menu-main'>{viewText}</span>
+            <ul class="resolution-menu-level">
               {
                 Object.keys(ratioValue).map((item)=>(
-                  ratioValue[item].show && (<li class="fl-menu-level-1" onClick={() => setRatio(item)}>{ratioValue[item].name}</li>) 
+                  ratioValue[item].show && (<li class="resolution-menu-level-1" onClick={() => setRatio(item)}>{ratioValue[item].name}</li>) 
                 ))
               }
             </ul>

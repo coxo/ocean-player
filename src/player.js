@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback, useContext, createContext } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import VideoEvent from './event';
 import { getVideoType, createFlvPlayer, createHlsPlayer,detectorPlayeMode,tansCodingToUrl, getScreenRate, installState } from './util';
 import ContrallerBar from './contraller_bar';
@@ -10,121 +10,9 @@ import DragEvent from './event/dragEvent';
 import Api from './api';
 import LiveHeart from './live_heart';
 import PropTypes from 'prop-types';
-import IconFont from './iconfont'
 import './style/index.less';
-import './style/message.less'
 
-const CountContext = createContext(12)
-
-const ReConnection = ({connectHandle}) => {
-  const {connectCount, connectStatus, children} = useContext(CountContext)
-
-  return (
-    <>
-       <div className={'lm-player-container lm-c-player-component ocean-error'}>
-          <div className="player-mask-layout"><video/></div>
-          {children}
-          <div className="lm-player-message-mask lm-player-mask-loading-animation">
-            {
-              connectStatus !== 2 ? <span  className="lm-player-message" style={{ fontSize: 24 }}>第{ connectCount }次连接中，请稍候...</span> : 
-              <> 
-              <IconFont style={{ fontSize: 68, color: '#DBE1EA' }} type={'lm-player-M_Device_jiazaishibai'}/>
-              <span className="lm-player-message">连接失败<span className="refresh-action" onClick={()=> connectHandle()}>刷新重试</span></span>
-              </>
-            }
-          </div>
-        </div>
-    </>
-  )
-}
-
-/**
- * 播放控件容器
- * @param {*} param0 
- * @returns 
- */
-function SinglePlayer({...props}){
-  const [connectStatus, setConnectStatus] = useState(1);
-  const connectCount = useRef(0)
-
-  const timer = useRef(null)
-  const playerStatus = useRef(0)
-
-  useEffect(() => {
-    return () => {
-      timer && clearTimeout(timer)
-    }
-  }, [])
-
-  const setConnectCount = (count)=>{
-    connectCount.current = count;
-  }
-
-  const reconnectHandle = ()=>{
-    setConnectCount(0)
-    setConnectStatus(1)
-  }
-
-  const updateStatus = (status)=>{
-    playerStatus.current = status;
-  }
-
-
-
-  return (<>
-    {connectStatus == 1 ? 
-    <ZPlayer
-    errorNoticeHandle={()=>{
-      console.warn('开流状态记录....'+playerStatus.current);
-
-      if(playerStatus.current == 0){
-        console.warn('首次开流失败！');
-        setConnectStatus(2)
-        return
-      }
-
-      if(playerStatus.current == 1){
-        setConnectCount(0)
-        updateStatus(2)
-      }
-
-      console.warn('开流连接次数....'+connectCount.current)
-
-      const currentStatus = props.errorReloadTimer > connectCount.current
-      if(currentStatus){
-        setConnectCount(connectCount.current + 1)
-        setConnectStatus(0)
-        // 开启定时器-更新连接状态
-        timer.current = setTimeout(()=>{
-          // 连接状态重置为可连接状态
-          setConnectStatus(1)
-        }, 1000*1)
-      }else{
-        // 结束连接
-        setConnectStatus(2)
-      }
-      
-   }}
-   {...props}
-   onStreamMounted={(data)=>{
-    if(data.streamState == 1){
-      updateStatus(1)
-    }
-    props.onStreamMounted && props.onStreamMounted(data)
-  }}
-   >
-   </ZPlayer> :     
-   <CountContext.Provider value={{
-     connectStatus,
-     connectCount: connectCount.current,
-     children: props.errorExtContents
-   }}>
-      <ReConnection connectHandle={()=>reconnectHandle()}/>
-   </CountContext.Provider>}
-   </> )
-}
-
-function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum,deviceInfo, ...props }) {
+function SinglePlayer({ type, file, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum,deviceInfo, ...props }) {
   const playContainerRef = useRef(null);
   const [playerObj, setPlayerObj] = useState(null);
   const playerRef = useRef(null);
@@ -138,6 +26,10 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
 
   // 开流状态 0 失败/未开流  1 开流成功
   const [streamState, setStreamState] = useState(0);
+
+  installState(function(){
+    setInstall(true)
+  })
 
   function onToken(token){
     props.onVideoFn && props.onVideoFn({
@@ -208,16 +100,13 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
   }, [file,resolution]);
 
   useEffect(() => {
-    installState(function(){
-      setInstall(true)
-    })
     props.onStreamMounted && props.onStreamMounted({streamState})
   }, [streamState]);
 
   return (
     <div className={`lm-player-container ${className}`} ref={playContainerRef}>
       <div className="player-mask-layout">
-        <video autoPlay={autoPlay} preload={preload} muted={muted} poster={poster} controls={false} crossorigin={"Anonymous"} usecors={true} playsInline={playsinline} loop={loop} style={colorPicker} />
+        <video autoPlay={autoPlay} preload={preload} muted={muted} poster={poster} controls={false} playsInline={playsinline} loop={loop} style={colorPicker} />
       </div>
       <VideoTools
         playerObj={playerObj}
@@ -225,6 +114,7 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
         key={file}
         install={install}
         hideContrallerBar={props.hideContrallerBar}
+        errorReloadTimer={props.errorReloadTimer}
         scale={props.scale}
         switchResolution={(resolution) => {
           setResolution(resolution)
@@ -239,7 +129,6 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
         rightExtContents={props.rightExtContents}
         rightMidExtContents={props.rightMidExtContents}
         draggable={props.draggable}
-        errorNoticeHandle={props.errorNoticeHandle}
       />
       {children}
     </div>
@@ -258,10 +147,10 @@ function VideoTools({
   leftMidExtContents,
   rightExtContents,
   rightMidExtContents,
+  errorReloadTimer,
   install,
   colorPicker,
   setStreamState,
-  errorNoticeHandle
 }) {
   if (!playerObj) {
     return <NoSource install={install}/>;
@@ -291,7 +180,7 @@ function VideoTools({
           {!isLive && <TimeLine api={playerObj.api} event={playerObj.event} />}
         </ContrallerEvent>
       )}
-      <ErrorEvent flv={playerObj.flv} hls={playerObj.hls} api={playerObj.api} event={playerObj.event} errorNoticeHandle={errorNoticeHandle}/>
+      <ErrorEvent flv={playerObj.flv} hls={playerObj.hls} api={playerObj.api} event={playerObj.event} errorReloadTimer={errorReloadTimer} />
       {isLive && <LiveHeart api={playerObj.api} />}
     </>
   );
