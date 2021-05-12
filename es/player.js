@@ -914,6 +914,7 @@ const GL_CACHE = {
 const LOCAL_PORT = ["15080", "15081", "15082", "15083", "15084", "15085", "15086", "15087", "15088", "15089"];
 /**
  * 获取视频分辨率
+ * typecode为多媒体使用
  */
 
 const VIDEO_RESOLUTION = {
@@ -922,6 +923,7 @@ const VIDEO_RESOLUTION = {
     name: '超清',
     resolution: '1080p',
     bitrate: '2M',
+    templateCode: 171001,
     show: true
   },
   '2': {
@@ -929,6 +931,7 @@ const VIDEO_RESOLUTION = {
     name: '高清',
     resolution: '720p',
     bitrate: '2M',
+    templateCode: 171002,
     show: true
   },
   '3': {
@@ -936,6 +939,7 @@ const VIDEO_RESOLUTION = {
     name: '标清',
     resolution: '360p',
     bitrate: '500K',
+    templateCode: 171003,
     show: true
   },
   '4': {
@@ -943,6 +947,7 @@ const VIDEO_RESOLUTION = {
     name: '标清',
     resolution: '480p',
     bitrate: '1M',
+    templateCode: 1710011,
     show: false
   },
   '5': {
@@ -950,6 +955,7 @@ const VIDEO_RESOLUTION = {
     name: '原始',
     resolution: '',
     bitrate: '',
+    templateCode: 10000,
     show: true
   }
 };
@@ -1188,6 +1194,12 @@ function computedBound(ele, currentPosition, scale) {
     return;
   }
 }
+function getQueryString(url, name) {
+  var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+  var r = url.split("?")[1].match(reg);
+  if (r != null) return unescape(r[2]);
+  return null;
+}
 function JSONP(url) {
   let script = document.createElement('script'); //创建script标签
 
@@ -1302,7 +1314,7 @@ function detectorPlayeMode() {
 
 function installState(callback) {
   // 进行类型检测 是否插件模式
-  if (!detectorPlayeMode()) return;
+  if (detectorPlayeMode() == 1) return;
   if (sessionStorage.getItem('_TEMP_PLAY_CODE') == '10000') return; // 进行本地检测
 
   const port = getLocalPort();
@@ -1336,6 +1348,66 @@ function installState(callback) {
     callback && callback();
   });
 }
+function decodeService(player, onToken) {
+  const playeMode = detectorPlayeMode();
+  genuuid();
+  let url = '';
+
+  switch (playeMode) {
+    case 1:
+      url = tansDecoding(player);
+      break;
+
+    case 2:
+      url = serverDecoding(player);
+      break;
+
+    default:
+      url = browserDecoding(player);
+      break;
+  } //url = url + '&token=' + key
+  // 免责工具使用
+  //onToken && onToken(key)
+
+
+  return url;
+}
+/**
+ * 浏览器端解码
+ * @param {*} player 
+ * @returns 
+ */
+
+function browserDecoding(player) {
+  return player === null || player === void 0 ? void 0 : player.file;
+}
+/**
+ * 服务端解码逻辑
+ * @param {*} player 
+ * @param {*} onToken 
+ * @returns 
+ */
+
+function serverDecoding(player) {
+  var _BASE64$encode, _BASE64$encode$replac, _BASE64$encode$replac2;
+
+  const {
+    file,
+    resolution
+  } = player;
+  const ip = window.location.origin; // 从file中提取 Authorization
+
+  const authorization = getQueryString(file, 'Authorization');
+  const templateCode = findVideoAttribute(resolution, 'templateCode'); // 原始码流
+
+  if (templateCode == 10000) {
+    // 浏览器flv解码
+    return browserDecoding(player);
+  }
+
+  const resourceUrl = (_BASE64$encode = __BASE64.encode(file)) === null || _BASE64$encode === void 0 ? void 0 : (_BASE64$encode$replac = _BASE64$encode.replaceAll('=', '')) === null || _BASE64$encode$replac === void 0 ? void 0 : (_BASE64$encode$replac2 = _BASE64$encode$replac.replaceAll('/', '_')) === null || _BASE64$encode$replac2 === void 0 ? void 0 : _BASE64$encode$replac2.replaceAll('+', '-');
+  return ip + `/staticResource/v2/video/media/transfer?Authorization=${authorization}&templateCode=${templateCode}&resourceUrl=${resourceUrl}`;
+}
 /**
  * 客户端插件访问入口
  * @param {*} url 
@@ -1344,45 +1416,38 @@ function installState(callback) {
  * @returns 
  */
 
-function tansCodingToUrl(player, onToken) {
-  var _BASE64$encode, _BASE64$encode$replac, _BASE64$encode$replac2;
+function tansDecoding(player) {
+  var _BASE64$encode2, _BASE64$encode2$repla, _BASE64$encode2$repla2;
 
   let param1 = '';
   let param2 = '';
   let param3 = '';
-  let param4 = '';
   let {
     file,
     resolution,
     deviceInfo
-  } = player;
-  const key = genuuid(); // 进行类型检测 是否插件模式
-
-  if (!detectorPlayeMode()) return file; // 是否加密
+  } = player; // 是否加密
 
   file = file + getGlobalCache(GL_CACHE.DM);
   const url_info = {
     port: getLocalPort(),
-    pull_uri: (_BASE64$encode = __BASE64.encode(file)) === null || _BASE64$encode === void 0 ? void 0 : (_BASE64$encode$replac = _BASE64$encode.replaceAll('=', '')) === null || _BASE64$encode$replac === void 0 ? void 0 : (_BASE64$encode$replac2 = _BASE64$encode$replac.replaceAll('/', '_')) === null || _BASE64$encode$replac2 === void 0 ? void 0 : _BASE64$encode$replac2.replaceAll('+', '-')
+    pull_uri: (_BASE64$encode2 = __BASE64.encode(file)) === null || _BASE64$encode2 === void 0 ? void 0 : (_BASE64$encode2$repla = _BASE64$encode2.replaceAll('=', '')) === null || _BASE64$encode2$repla === void 0 ? void 0 : (_BASE64$encode2$repla2 = _BASE64$encode2$repla.replaceAll('/', '_')) === null || _BASE64$encode2$repla2 === void 0 ? void 0 : _BASE64$encode2$repla2.replaceAll('+', '-')
   }; // 分辨率，如果为空，为原始分辨率
 
-  param2 = '&token=' + key; // 免责工具使用
-
-  onToken && onToken(key);
-
   if (resolution) {
-    param1 = '&resolution=' + resolution; // 码率
+    // 分辨率
+    param1 = '&resolution=' + resolution; // 根据分辨率获取码率
 
-    param3 = '&bitrate=' + findVideoAttribute(resolution, 'bitrate');
+    param2 = '&bitrate=' + findVideoAttribute(resolution, 'bitrate');
   } // value: "100602", label: "球机"
 
 
   if (deviceInfo && deviceInfo.type == "100602") {
-    param4 = '&quickplay=0';
+    param3 = '&quickplay=0';
   }
 
-  console.log(file + param1 + param3 + param4);
-  return lcStore$1.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3 + param4;
+  console.log(file + param1 + param3);
+  return lcStore$1.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3;
 }
 
 function IconFont({
@@ -3196,7 +3261,7 @@ function ZPlayer({
 
       try {
         playerObject.flv = createFlvPlayer(playerObject.video, { ...props,
-          file: tansCodingToUrl({
+          file: decodeService({
             file,
             resolution,
             deviceInfo
@@ -3808,7 +3873,7 @@ function HistoryPlayer({
     if (formartType === 'flv' || type === 'flv') {
       isInit = true;
       playerObject.flv = createFlvPlayer(playerObject.video, { ...props,
-        file: tansCodingToUrl({
+        file: decodeService({
           file,
           resolution
         })

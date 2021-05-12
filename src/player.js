@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo, useCallback, useContext, createContext } from 'react';
 import VideoEvent from './event';
-import { getVideoType, createFlvPlayer, createHlsPlayer,detectorPlayeMode,tansCodingToUrl, getScreenRate, installState } from './util';
+import { getVideoType, createFlvPlayer, createHlsPlayer,detectorPlayeMode, decodeService, getScreenRate, installState } from './util';
 import ContrallerBar from './contraller_bar';
 import ContrallerEvent from './event/contrallerEvent';
 import VideoMessage, { NoSource } from './message';
@@ -175,7 +175,7 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
     if (formartType === 'flv' || type === 'flv') {
       isInit = true;
       try{
-        playerObject.flv = createFlvPlayer(playerObject.video, { ...props, file: tansCodingToUrl({file, resolution, deviceInfo}, onToken) });
+        playerObject.flv = createFlvPlayer(playerObject.video, { ...props, file: decodeService({file, resolution, deviceInfo}, onToken) });
       }catch(e) {
         console.error(e)
       }

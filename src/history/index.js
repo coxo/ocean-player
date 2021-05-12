@@ -10,7 +10,7 @@ import VideoEvent from '../event';
 import PlayEnd from './play_end';
 import EventName from '../event/eventName';
 import ContrallerEvent from '../event/contrallerEvent';
-import { getVideoType, createFlvPlayer, createHlsPlayer, tansCodingToUrl, getScreenRate  } from '../util';
+import { getVideoType, createFlvPlayer, createHlsPlayer, decodeService, getScreenRate } from '../util';
 import { computedTimeAndIndex } from './utils';
 
 function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum, speed, ...props }) {
@@ -119,7 +119,7 @@ function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, mu
     const formartType = getVideoType(file);
     if (formartType === 'flv' || type === 'flv') {
       isInit = true;
-      playerObject.flv = createFlvPlayer(playerObject.video, { ...props,  file: tansCodingToUrl({file, resolution}) });
+      playerObject.flv = createFlvPlayer(playerObject.video, { ...props,  file: decodeService({file, resolution}) });
     }
     if (formartType === 'm3u8' || type === 'hls') {
       isInit = true;

@@ -252,6 +252,13 @@ export function getRandom() {
   return Math.random().toString(36).substr(2)
 }
 
+export function getQueryString(url, name) {
+  var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+   
+  var r = url.split("?")[1].match(reg);
+  if (r != null) return unescape(r[2]); return null;
+}
+
 export function JSONP(url){
   let script = document.createElement('script')//创建script标签
   let functionName = 'fang' + parseInt(Math.random()*10000000,10)//设置调用函数名
@@ -361,7 +368,7 @@ export function detectorPlayeMode(){
  */
 export function installState(callback){
   // 进行类型检测 是否插件模式
-  if (!detectorPlayeMode()) return;
+  if (detectorPlayeMode() == 1) return;
 
   if(sessionStorage.getItem('_TEMP_PLAY_CODE') == '10000') return;
   // 进行本地检测
@@ -393,6 +400,61 @@ export function installState(callback){
 });
 }
 
+export function decodeService(player, onToken){
+  const playeMode = detectorPlayeMode()
+  const key = genuuid()
+  let url = ''
+
+  switch (playeMode) {
+    case 1:
+      url = tansDecoding(player)
+      break;
+    case 2:
+      url = serverDecoding(player)
+      break;
+    default:
+      url = browserDecoding(player)
+      break;
+  }
+
+  //url = url + '&token=' + key
+  // 免责工具使用
+  //onToken && onToken(key)
+
+  return url
+}
+
+/**
+ * 浏览器端解码
+ * @param {*} player 
+ * @returns 
+ */
+export function browserDecoding(player){
+  return player?.file
+}
+
+/**
+ * 服务端解码逻辑
+ * @param {*} player 
+ * @param {*} onToken 
+ * @returns 
+ */
+export function serverDecoding(player){
+  const {file, resolution} = player
+  const ip = window.location.origin
+  // 从file中提取 Authorization
+  const authorization = getQueryString(file, 'Authorization')
+  const templateCode = findVideoAttribute(resolution,'templateCode')
+
+  // 原始码流
+  if(templateCode == 10000){
+    // 浏览器flv解码
+    return browserDecoding(player)
+  }
+
+  const resourceUrl = BASE64.encode(file)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','-')
+  return ip + `/staticResource/v2/video/media/transfer?Authorization=${authorization}&templateCode=${templateCode}&resourceUrl=${resourceUrl}`
+}
 
 /**
  * 客户端插件访问入口
@@ -401,19 +463,13 @@ export function installState(callback){
  * @param {*} onToken 
  * @returns 
  */
-export function tansCodingToUrl(player, onToken){
+export function tansDecoding(player){
   
   let param1 = ''
   let param2 = ''
   let param3 = ''
-  let param4 = ''
 
   let {file, resolution, deviceInfo} = player
-
-  const key = genuuid()
-
-  // 进行类型检测 是否插件模式
-  if (!detectorPlayeMode()) return file
 
   // 是否加密
   file = file + getGlobalCache(GL_CACHE.DM)
@@ -422,27 +478,21 @@ export function tansCodingToUrl(player, onToken){
       port: getLocalPort(),
       pull_uri: BASE64.encode(file)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','-')
   }
+  
   // 分辨率，如果为空，为原始分辨率
-
-  param2 = '&token=' + key
-
-  // 免责工具使用
-  onToken && onToken(key)
-
   if(resolution){
+    // 分辨率
     param1 = '&resolution=' + resolution
-
-    // 码率
-    param3 = '&bitrate=' + findVideoAttribute(resolution,'bitrate')
-
+    // 根据分辨率获取码率
+    param2 = '&bitrate=' + findVideoAttribute(resolution, 'bitrate')
   }
   
   // value: "100602", label: "球机"
   if(deviceInfo && deviceInfo.type == "100602"){
-    param4 = '&quickplay=0'
+    param3 = '&quickplay=0'
   }
-  console.log(file+param1+param3+param4)
+  console.log(file+param1+param3)
 
-  return lcStore.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3 + param4
+  return lcStore.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3
 }
 

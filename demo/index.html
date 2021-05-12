@@ -1804,7 +1804,7 @@
           setLiveType("flv")
           liveInputRef.current.value = URL.createObjectURL(e.target.files[0])
         }
-        localStorage.setItem('PY_PLUS','{"mode":1,"version":"v1.0.10","decryptionMode":"&decryption=1","reloadTimer":10,"switchRate":true,"patternAuth":false,"streamReal":true,"palette":true}')
+        localStorage.setItem('PY_PLUS','{"mode":2,"version":"v1.0.10","decryptionMode":"&decryption=1","reloadTimer":10,"switchRate":true,"patternAuth":false,"streamReal":true,"palette":true}')
 
         sessionStorage.setItem('_APP_PLAY_VERSION','v1.0.10')
         function onVideoFn(obj){
@@ -1880,8 +1880,7 @@
 
                 setPlayObj(null)
                 setPlayerKey(true)
-
-                setFile('http://192.168.100.10:2234/staticResource/v2/video/live.flv/753383352?Authorization=eyJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25JZCI6IjEwMDEwMTAwMDU0OCIsImV4dCI6MTYyMDYzMjAzMjU1NCwidWlkIjoiMTAxMDAzMDAwMDc1IiwidmFsaWRTdGF0ZSI6MTA0NDA2LCJyb2xlSWQiOlsxMDEwMDIwMDAwOTNdLCJ2YWxpZFRpbWUiOm51bGwsIm9wdENlbnRlcklkIjoiMTAwMTAwMDAwMzIxIiwidXNlclR5cGUiOjEwMDcwMiwiaWF0IjoxNjIwMzcyODMyNTU0fQ.PlLPqWff4hYP0ZCl9_s7EyzBf0sZ7wGcuz2-kFdIDgM')
+                setFile('http://192.168.101.39:2234/staticResource/v2/video/live.flv/753383104?Authorization=eyJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25JZCI6IjEwMDExMDAwMDAwMSIsImV4dCI6MTYyMDk5MjczNDY0NCwidWlkIjoiMTAxMDAzMDAwMDAxIiwidmFsaWRTdGF0ZSI6MTA0NDA2LCJyb2xlSWQiOlsxMDEwMDIwMDAwMDFdLCJ2YWxpZFRpbWUiOm51bGwsIm9wdENlbnRlcklkIjoiMTAwMTAwMTAwMDAxIiwidXNlclR5cGUiOjEwMDcwMiwiaWF0IjoxNjIwNzMzNTM0NjQ0fQ.w5hIyfabjWcN4le2X2M4IANUZSh1hTU7Y2sSwvMq6Kk')
                 //  setLiveNum(sNumInputRef.current.value)
                 }}>
                   播放

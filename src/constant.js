@@ -28,13 +28,14 @@ export const hostUrl = 'http://127.0.0.1';
   
 /**
  * 获取视频分辨率
+ * typecode为多媒体使用
  */
  export const VIDEO_RESOLUTION = {
-    '1': { value: '1920*1080', name: '超清', resolution:'1080p', bitrate:'2M',show: true},
-    '2': { value: '1280*720', name: '高清', resolution:'720p', bitrate:'2M',show: true},
-    '3': { value: '640*360', name: '标清', resolution:'360p', bitrate:'500K',show: true},
-    '4': { value: '640*480', name: '标清', resolution:'480p', bitrate:'1M',show: false},
-    '5': { value: '', name: '原始', resolution: '', bitrate:'',show: true},
+    '1': { value: '1920*1080', name: '超清', resolution:'1080p', bitrate:'2M', templateCode: 171001, show: true},
+    '2': { value: '1280*720', name: '高清', resolution:'720p', bitrate:'2M', templateCode: 171002, show: true},
+    '3': { value: '640*360', name: '标清', resolution:'360p', bitrate:'500K', templateCode: 171003, show: true},
+    '4': { value: '640*480', name: '标清', resolution:'480p', bitrate:'1M', templateCode: 1710011, show: false},
+    '5': { value: '', name: '原始', resolution: '', bitrate:'', templateCode: 10000, show: true},
 }
   
 export const PY_M_CC_NAME = '播放配置出错，请检查浏览器本地存储PY_PLUS！'
