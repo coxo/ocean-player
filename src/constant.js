@@ -5,9 +5,11 @@ export const hostUrl = 'http://127.0.0.1';
  * switchRate：码率切换控制
  */
  export const GL_CACHE = {
+    TP :'mode', 
     DM :'decryptionMode',
     SR :'switchRate',
     PT :'palette',
+    FR_CON :'connectOnce',
   }
   
   /**

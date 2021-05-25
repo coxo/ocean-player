@@ -903,9 +903,11 @@ const hostUrl = 'http://127.0.0.1';
  */
 
 const GL_CACHE = {
+  TP: 'mode',
   DM: 'decryptionMode',
   SR: 'switchRate',
-  PT: 'palette'
+  PT: 'palette',
+  FR_CON: 'connectOnce'
 };
 /**
  * 客户端插件模式，随机端口
@@ -1303,7 +1305,7 @@ function getAppPlayerVersion() {
  */
 
 function detectorPlayeMode() {
-  const isPlus = getGlobalCache('mode');
+  const isPlus = getGlobalCache(GL_CACHE.TP);
   sessionStorage.setItem('_TEMP_PLAY_MODE', isPlus); // 是否本地插件播放 0是互联网模式，不走插件
 
   return isPlus;
@@ -1763,6 +1765,7 @@ function LeftBar({
 }) {
   const [openSliderVolume, setOpenSliderVolume] = useState(false);
   const [dep, setDep] = useState(Date.now());
+  const elRef = useRef(null);
   useEffect(() => {
     const updateRender = () => {
       setDep(Date.now());
@@ -1796,8 +1799,20 @@ function LeftBar({
     isHistory ? reloadHistory() : api.reload();
     event.emit(EventName.CLEAR_ERROR_TIMER);
   }, [event, isHistory, api]);
+  useEffect(() => {
+    // 点击其他地方隐藏输入框
+    elRef.current.handleClickOutside = e => {
+      if (!elRef.current.contains(e.target)) {
+        setOpenSliderVolume(false);
+      }
+    };
+
+    document.addEventListener('click', elRef.current.handleClickOutside);
+    return () => document.removeEventListener('click', elRef.current.handleClickOutside);
+  }, []);
   return /*#__PURE__*/React.createElement("div", {
-    className: "contraller-left-bar"
+    className: "contraller-left-bar",
+    ref: elRef
   }, leftExtContents, /*#__PURE__*/React.createElement(Bar, {
     visibel: !isLive
   }, /*#__PURE__*/React.createElement(IconFont, {
@@ -1806,8 +1821,7 @@ function LeftBar({
     title: statusText
   })), /*#__PURE__*/React.createElement(Bar, {
     className: `contraller-bar-volume ${sliderClassName}`,
-    onMouseOver: () => setOpenSliderVolume(true),
-    onMouseOut: () => setOpenSliderVolume(false)
+    onClick: () => setOpenSliderVolume(true)
   }, /*#__PURE__*/React.createElement(IconFont, {
     onClick: mutedChantgeStatus,
     type: volumeIcon,
@@ -1845,6 +1859,8 @@ function ColorPicker({
   const [contrastValue, setContrastValue] = useState(50);
   const [saturateValue, setSaturateValue] = useState(50);
   const [hueValue, setHueValue] = useState(0);
+  const elRef = useRef(null);
+  const [isPicker, setIsPicker] = useState(false);
   const brightness = useMemo(() => {
     const cv = brightnessValue / 50;
     if (cv == 1) return '';
@@ -1900,14 +1916,32 @@ function ColorPicker({
     colorfilter({});
   };
 
+  const handleOpenPicker = data => {
+    setIsPicker(!isPicker);
+  };
+
+  useEffect(() => {
+    // 点击其他地方隐藏输入框
+    elRef.current.handleClickOutside = e => {
+      if (!elRef.current.contains(e.target)) {
+        setIsPicker(false);
+      }
+    };
+
+    document.addEventListener('click', elRef.current.handleClickOutside);
+    return () => document.removeEventListener('click', elRef.current.handleClickOutside);
+  }, []);
   return /*#__PURE__*/React.createElement(Bar, {
     className: 'colorPicker'
+  }, /*#__PURE__*/React.createElement("div", {
+    ref: elRef
   }, /*#__PURE__*/React.createElement(IconFont, {
     title: '画面设置',
-    type: 'lm-player-S_Device_shezhi'
-  }), /*#__PURE__*/React.createElement("div", {
+    type: 'lm-player-S_Device_shezhi',
+    onClick: handleOpenPicker
+  }), isPicker && /*#__PURE__*/React.createElement("div", {
     class: "colorPicker-container"
-  }, /*#__PURE__*/React.createElement("span", null, " \u89C6\u9891\u753B\u9762\u8BBE\u7F6E "), " ", /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, " \u89C6\u9891\u753B\u9762\u8BBE\u7F6E "), /*#__PURE__*/React.createElement("span", {
     className: "colorPicker-reset",
     onClick: handleResetChange
   }, "\xA0", /*#__PURE__*/React.createElement(IconFont, {
@@ -1941,7 +1975,56 @@ function ColorPicker({
     max: 360,
     onChange: handleHueChange,
     value: hueValue
-  }), /*#__PURE__*/React.createElement("span", null, " ", hueValue, " "))));
+  }), /*#__PURE__*/React.createElement("span", null, " ", hueValue, " ")))));
+}
+
+function ResolutionPicker({
+  switchResolution,
+  api,
+  name
+}) {
+  const [isResolution, setIsResolution] = useState(false);
+  const resolutionRef = useRef(null); // 获取视频分辨率
+
+  const ratioValue = VIDEO_RESOLUTION; // 分辨率-默认显示
+
+  const [viewText, setViewText] = useState(findVideoAttribute(api.getResolution(), 'name'));
+
+  const handleOpenResolution = data => {
+    setIsResolution(!isResolution);
+  };
+
+  const setRatio = useCallback((...args) => {
+    setViewText(ratioValue[args].name);
+    switchResolution && switchResolution(ratioValue[args].resolution);
+  }, [api]);
+  useEffect(() => {
+    // 点击其他地方隐藏输入框
+    resolutionRef.current.handleClickOutside = e => {
+      if (!resolutionRef.current.contains(e.target)) {
+        setIsResolution(false);
+      }
+    };
+
+    document.addEventListener('click', resolutionRef.current.handleClickOutside);
+    return () => document.removeEventListener('click', resolutionRef.current.handleClickOutside);
+  }, []);
+  useEffect(() => {
+    setViewText(name);
+  }, [name]);
+  return /*#__PURE__*/React.createElement(Bar, {
+    className: 'fl-menu-hc ',
+    onClick: handleOpenResolution
+  }, /*#__PURE__*/React.createElement("div", {
+    ref: resolutionRef
+  }, /*#__PURE__*/React.createElement("span", {
+    class: "fl-menu-hc-main"
+  }, viewText), isResolution && /*#__PURE__*/React.createElement("ul", {
+    class: "fl-menu-hc-level"
+  }, Object.keys(ratioValue).map(item => ratioValue[item].show && /*#__PURE__*/React.createElement("li", {
+    class: "fl-menu-hc-level-1",
+    onClick: () => setRatio(item)
+  }, ratioValue[item].name)))));
 }
 
 function RightBar({
@@ -1955,9 +2038,7 @@ function RightBar({
   switchResolution,
   colorPicker
 }) {
-  const [dep, setDep] = useState(Date.now()); // 获取视频分辨率
-
-  const ratioValue = VIDEO_RESOLUTION; // 分辨率-默认显示
+  const [dep, setDep] = useState(Date.now()); // 分辨率-默认显示
 
   const [viewText, setViewText] = useState(findVideoAttribute(api.getResolution(), 'name')); // 控制调色盘显示
 
@@ -1996,10 +2077,6 @@ function RightBar({
       api.setPosition(position, true);
     }
   }, [api, playContainer]);
-  const setRatio = useCallback((...args) => {
-    setViewText(ratioValue[args].name);
-    switchResolution && switchResolution(ratioValue[args].resolution);
-  }, [api]);
   return /*#__PURE__*/React.createElement("div", {
     className: "contraller-right-bar"
   }, rightMidExtContents, scale && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Bar, null, /*#__PURE__*/React.createElement(IconFont, {
@@ -2016,16 +2093,26 @@ function RightBar({
     type: 'lm-player-ZoomIn_Main'
   }))), isPalette && /*#__PURE__*/React.createElement(ColorPicker, {
     colorfilter: colorPicker
-  }), isLive && isSwithRate && /*#__PURE__*/React.createElement(Bar, {
-    className: 'fl-menu'
-  }, /*#__PURE__*/React.createElement("span", {
-    class: "fl-menu-main"
-  }, viewText), /*#__PURE__*/React.createElement("ul", {
-    class: "fl-menu-level"
-  }, Object.keys(ratioValue).map(item => ratioValue[item].show && /*#__PURE__*/React.createElement("li", {
-    class: "fl-menu-level-1",
-    onClick: () => setRatio(item)
-  }, ratioValue[item].name)))), snapshot && /*#__PURE__*/React.createElement(Bar, null, /*#__PURE__*/React.createElement(IconFont, {
+  }), isLive && isSwithRate &&
+  /*#__PURE__*/
+  // <Bar className={'fl-menu-hc '} onClick={handleOpenResolution}>
+  //     <div ref={resolutionRef}>
+  //     <span class='fl-menu-hc-main'>{viewText}</span>
+  //     {isResolution && <ul class="fl-menu-hc-level">
+  //       {
+  //         Object.keys(ratioValue).map((item)=>(
+  //           ratioValue[item].show && (<li class="fl-menu-hc-level-1" onClick={() => setRatio(item)}>{ratioValue[item].name}</li>) 
+  //         ))
+  //       }
+  //     </ul>
+  //     }
+  //     </div>
+  // </Bar>
+  React.createElement(ResolutionPicker, {
+    name: viewText,
+    switchResolution: switchResolution,
+    api: api
+  }), snapshot && /*#__PURE__*/React.createElement(Bar, null, /*#__PURE__*/React.createElement(IconFont, {
     title: "\u622A\u56FE",
     onClick: () => snapshot(api.snapshot()),
     type: "lm-player-SearchBox"
@@ -3098,7 +3185,7 @@ const ReConnection = ({
   }, connectStatus !== 2 ? /*#__PURE__*/React.createElement("span", {
     className: "lm-player-message",
     style: {
-      fontSize: 24
+      fontSize: 18
     }
   }, "\u7B2C", connectCount, "\u6B21\u8FDE\u63A5\u4E2D\uFF0C\u8BF7\u7A0D\u5019...") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IconFont, {
     style: {
@@ -3127,6 +3214,10 @@ function SinglePlayer({ ...props
   const timer = useRef(null);
   const playerStatus = useRef(0);
   useEffect(() => {
+    if (!getGlobalCache(GL_CACHE.FR_CON)) {
+      updateStatus(1);
+    }
+
     return () => {
       timer && clearTimeout(timer);
     };
@@ -3147,8 +3238,6 @@ function SinglePlayer({ ...props
 
   return /*#__PURE__*/React.createElement(React.Fragment, null, connectStatus == 1 ? /*#__PURE__*/React.createElement(ZPlayer, _extends({
     errorNoticeHandle: () => {
-      console.warn('开流状态记录....' + playerStatus.current);
-
       if (playerStatus.current == 0) {
         console.warn('首次开流失败！');
         setConnectStatus(2);

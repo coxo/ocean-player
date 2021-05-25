@@ -1,4 +1,4 @@
-import React, { useMemo,useState } from 'react'
+import React, { useMemo,useState,useRef,useEffect } from 'react'
 import IconFont from '../iconfont'
 import Bar from './bar'
 import { Slider } from 'antd'
@@ -8,6 +8,9 @@ function ColorPicker({ playContainer, api, colorfilter }) {
   const [contrastValue, setContrastValue] = useState(50)
   const [saturateValue, setSaturateValue] = useState(50)
   const [hueValue, setHueValue] = useState(0)
+
+  const elRef = useRef(null)
+  const [isPicker, setIsPicker] = useState(false)
 
   const brightness = useMemo(() => {
       const cv = brightnessValue/50
@@ -68,11 +71,30 @@ function ColorPicker({ playContainer, api, colorfilter }) {
     colorfilter({})
   }
 
+  const handleOpenPicker = data => {
+    setIsPicker(!isPicker)
+  }
+
+  useEffect(() => {
+    // 点击其他地方隐藏输入框
+    elRef.current.handleClickOutside = (e) =>{
+      if(!elRef.current.contains(e.target)){
+       setIsPicker(false)
+      }
+     }
+    document.addEventListener('click', elRef.current.handleClickOutside);
+    return () => document.removeEventListener('click', elRef.current.handleClickOutside);
+  }, [])
+
   return (
     <Bar className={'colorPicker'}>
-      <IconFont title={'画面设置'} type={'lm-player-S_Device_shezhi'} />
-      <div class="colorPicker-container">
-        <span> 视频画面设置 </span> <span className='colorPicker-reset' onClick={handleResetChange}>&nbsp;<IconFont title={'重置'} type={'lm-player-Refresh_Main'} />重置 </span> 
+      <div ref={elRef}>
+        <IconFont title={'画面设置'} type={'lm-player-S_Device_shezhi'} onClick={handleOpenPicker} />
+      {
+        isPicker && (
+        <div class="colorPicker-container">
+        <span> 视频画面设置 </span> 
+        <span className='colorPicker-reset' onClick={handleResetChange}>&nbsp;<IconFont title={'重置'} type={'lm-player-Refresh_Main'} />重置 </span>
         <div className="colorPicker-container-control">
           <span> 亮度 </span> <Slider min={0} max={100} onChange={handleBrightnessChange} value={ brightnessValue }  /><span> {brightnessValue} </span>
         </div>
@@ -85,6 +107,9 @@ function ColorPicker({ playContainer, api, colorfilter }) {
         <div className="colorPicker-container-control hue-horizontal">
           <span> 色调 </span> <Slider min={0} max={360} onChange={handleHueChange} value={ hueValue } /><span> {hueValue} </span>
         </div>
+      </div>
+        )
+      }
       </div>
     </Bar>
   )

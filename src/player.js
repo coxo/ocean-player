@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo, useCallback, useContext, createContext } from 'react';
 import VideoEvent from './event';
-import { getVideoType, createFlvPlayer, createHlsPlayer,detectorPlayeMode, decodeService, getScreenRate, installState } from './util';
+import { getVideoType, createFlvPlayer, createHlsPlayer,detectorPlayeMode, decodeService, getScreenRate, installState,getGlobalCache } from './util';
 import ContrallerBar from './contraller_bar';
 import ContrallerEvent from './event/contrallerEvent';
 import VideoMessage, { NoSource } from './message';
@@ -11,6 +11,7 @@ import Api from './api';
 import LiveHeart from './live_heart';
 import PropTypes from 'prop-types';
 import IconFont from './iconfont'
+import {GL_CACHE} from './constant'
 import './style/index.less';
 import './style/message.less'
 
@@ -26,7 +27,7 @@ const ReConnection = ({connectHandle}) => {
           {children}
           <div className="lm-player-message-mask lm-player-mask-loading-animation">
             {
-              connectStatus !== 2 ? <span  className="lm-player-message" style={{ fontSize: 24 }}>第{ connectCount }次连接中，请稍候...</span> : 
+              connectStatus !== 2 ? <span  className="lm-player-message" style={{ fontSize: 18 }}>第{ connectCount }次连接中，请稍候...</span> : 
               <> 
               <IconFont style={{ fontSize: 68, color: '#DBE1EA' }} type={'lm-player-M_Device_jiazaishibai'}/>
               <span className="lm-player-message">连接失败<span className="refresh-action" onClick={()=> connectHandle()}>刷新重试</span></span>
@@ -51,6 +52,9 @@ function SinglePlayer({...props}){
   const playerStatus = useRef(0)
 
   useEffect(() => {
+    if(!getGlobalCache(GL_CACHE.FR_CON)){
+      updateStatus(1)
+    }
     return () => {
       timer && clearTimeout(timer)
     }
@@ -69,14 +73,10 @@ function SinglePlayer({...props}){
     playerStatus.current = status;
   }
 
-
-
   return (<>
     {connectStatus == 1 ? 
     <ZPlayer
     errorNoticeHandle={()=>{
-      console.warn('开流状态记录....'+playerStatus.current);
-
       if(playerStatus.current == 0){
         console.warn('首次开流失败！');
         setConnectStatus(2)
@@ -87,7 +87,7 @@ function SinglePlayer({...props}){
         setConnectCount(0)
         updateStatus(2)
       }
-
+        
       console.warn('开流连接次数....'+connectCount.current)
 
       const currentStatus = props.errorReloadTimer > connectCount.current
@@ -103,7 +103,6 @@ function SinglePlayer({...props}){
         // 结束连接
         setConnectStatus(2)
       }
-      
    }}
    {...props}
    onStreamMounted={(data)=>{

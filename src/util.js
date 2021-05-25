@@ -358,7 +358,7 @@ export function getLocalPort(){
  * @returns 
  */
 export function detectorPlayeMode(){
-  const isPlus = getGlobalCache('mode')
+  const isPlus = getGlobalCache(GL_CACHE.TP)
   sessionStorage.setItem('_TEMP_PLAY_MODE', isPlus)
   // 是否本地插件播放 0是互联网模式，不走插件
   return isPlus

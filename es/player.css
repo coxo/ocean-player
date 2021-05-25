@@ -322,9 +322,64 @@
 .contraller-bar-layout .contraller-bar-item.fl-menu .fl-menu-level-1:active {
   background-image: linear-gradient(-180deg, #37415f, #333 98%);
 }
+.contraller-bar-layout .contraller-bar-item.fl-menu-hc {
+  text-align: center;
+  font-size: 12px;
+  width: auto;
+  position: relative;
+  min-height: 25px;
+  line-height: 28px;
+  height: 28px;
+  padding-right: 5px;
+}
+.contraller-bar-layout .contraller-bar-item.fl-menu-hc ul {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  background-color: #333;
+  -webkit-box-shadow: 0px -2px 6px 1px #222;
+  box-shadow: 0px -2px 6px 1px #222;
+}
+.contraller-bar-layout .contraller-bar-item.fl-menu-hc li {
+  font-size: 13px;
+  list-style: none;
+  text-align: right;
+}
+.contraller-bar-layout .contraller-bar-item.fl-menu-hc .fl-menu-hc-main {
+  color: #fff;
+  background-image: linear-gradient(-180deg, #37415f, #333 98%);
+  cursor: pointer;
+  width: auto;
+  min-width: 45px;
+  padding: 0 2px;
+  display: inline-block;
+}
+.contraller-bar-layout .contraller-bar-item.fl-menu-hc .fl-menu-hc-level {
+  z-index: 5;
+  left: auto;
+  right: 0px;
+  top: auto;
+  bottom: 28px;
+}
+.contraller-bar-layout .contraller-bar-item.fl-menu-hc .fl-menu-hc-level-1 {
+  position: relative;
+  width: 62px;
+  padding: 0 10px;
+  display: block;
+  text-align: center;
+  float: right;
+  color: white;
+  word-break: break-all;
+}
+.contraller-bar-layout .contraller-bar-item.fl-menu-hc .fl-menu-hc-level-1:hover {
+  background-image: linear-gradient(-180deg, #37415f, #333 98%);
+  cursor: pointer;
+}
+.contraller-bar-layout .contraller-bar-item.fl-menu-hc .fl-menu-hc-level-1:active {
+  background-image: linear-gradient(-180deg, #37415f, #333 98%);
+}
 .contraller-bar-layout .contraller-bar-item.colorPicker .colorPicker-container {
   position: absolute;
-  display: none;
   margin: 0;
   padding: 5px;
   background-color: #333;
@@ -360,9 +415,6 @@
 .contraller-bar-layout .contraller-bar-item.colorPicker .colorPicker-container span:last-child {
   position: absolute;
   right: 8px;
-}
-.contraller-bar-layout .contraller-bar-item.colorPicker:hover .colorPicker-container {
-  display: block;
 }
 .contraller-bar-layout .contraller-bar-item.colorPicker .colorPicker-container-control {
   position: relative;

@@ -61,6 +61,7 @@
     }
   }
 
+  
   .contraller-bar-item.fl-menu{
     text-align: center;
     font-size: 12px;
@@ -122,10 +123,66 @@
     }
   }
 
+  .contraller-bar-item.fl-menu-hc{
+    text-align: center;
+    font-size: 12px;
+    width:auto;
+    position: relative;
+    min-height: 25px;
+    line-height: 28px;
+    height: 28px;
+    padding-right:5px;
+    ul {
+      position: absolute;
+      margin: 0;
+      padding: 0;
+      background-color: #333;
+      -webkit-box-shadow: 0px -2px 6px 1px #222;
+      box-shadow: 0px -2px 6px 1px #222;
+    }
+    li{
+      font-size:13px;
+      list-style:none;
+      text-align: right;
+    }
+    .fl-menu-hc-main{
+      color: #fff;
+      background-image: linear-gradient(-180deg,#37415f,#333 98%);
+      cursor: pointer;
+      width: auto;
+      min-width: 45px;
+      padding: 0 2px;
+      display: inline-block;
+    }
+    .fl-menu-hc-level{
+      z-index: 5;
+      left: auto;
+      right: 0px;
+      top: auto;
+      bottom: 28px;
+    }
+    .fl-menu-hc-level-1 {
+      position: relative;
+      width: 62px;
+      padding: 0 10px;
+      display: block;
+      text-align: center;
+      float: right;
+      color: white;
+      word-break: break-all;
+      &:hover{
+        background-image: linear-gradient(-180deg,#37415f,#333 98%);
+        cursor: pointer;
+      }
+      &:active{
+        background-image: linear-gradient(-180deg,#37415f,#333 98%);
+      }
+    }
+  }
+
   .contraller-bar-item.colorPicker{
     .colorPicker-container{
       position: absolute;
-      display: none;
       margin: 0;
       padding: 5px;
       background-color: #333;
@@ -161,9 +218,6 @@
       }
       span:last-child{position: absolute;right: 8px;}
     }
-    &:hover .colorPicker-container{
-      display: block;
-    }
     .colorPicker-container-control{
       position: relative;
       padding:8px;
@@ -180,8 +234,6 @@
   transition: opacity 0.3s;
   &.hide-contraller-bar {
     opacity: 0;
-  }
-  .contraller-scale-bar {
   }
   .contraller-bar-item {
     display: block;

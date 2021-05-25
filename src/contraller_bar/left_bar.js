@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo,useRef } from 'react'
 import IconFont from '../iconfont'
 import Slider from '../slider'
 import Bar from './bar'
@@ -8,6 +8,7 @@ import PropTypes from 'prop-types'
 function LeftBar({ api, event, video, isHistory, reloadHistory, isLive, leftExtContents, leftMidExtContents }) {
   const [openSliderVolume, setOpenSliderVolume] = useState(false)
   const [dep, setDep] = useState(Date.now())
+  const elRef = useRef(null)
   useEffect(() => {
     const updateRender = () => {
       setDep(Date.now())
@@ -50,13 +51,24 @@ function LeftBar({ api, event, video, isHistory, reloadHistory, isLive, leftExtC
     event.emit(EventName.CLEAR_ERROR_TIMER)
   }, [event, isHistory, api])
 
+  useEffect(() => {
+    // 点击其他地方隐藏输入框
+    elRef.current.handleClickOutside = (e) =>{
+      if(!elRef.current.contains(e.target)){
+        setOpenSliderVolume(false)
+      }
+     }
+    document.addEventListener('click', elRef.current.handleClickOutside);
+    return () => document.removeEventListener('click', elRef.current.handleClickOutside);
+  }, [])
+
   return (
-    <div className="contraller-left-bar">
+    <div className="contraller-left-bar" ref={elRef}>
       {leftExtContents}
       <Bar visibel={!isLive}>
         <IconFont onClick={changePlayStatus} type={statusIconClassName} title={statusText} />
       </Bar>
-      <Bar className={`contraller-bar-volume ${sliderClassName}`} onMouseOver={() => setOpenSliderVolume(true)} onMouseOut={() => setOpenSliderVolume(false)}>
+      <Bar className={`contraller-bar-volume ${sliderClassName}`} onClick={() => setOpenSliderVolume(true)}>
         <IconFont onClick={mutedChantgeStatus} type={volumeIcon} title="音量" />
         <div className="volume-slider-layout">
           <Slider className="volume-slider" currentPercent={volumePercent} onChange={onChangeVolume} renderTips={precent => <span>{Math.round(precent * 100)}%</span>} tipsY={-2} />

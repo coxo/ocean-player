@@ -929,9 +929,11 @@
    */
 
   const GL_CACHE = {
+    TP: 'mode',
     DM: 'decryptionMode',
     SR: 'switchRate',
-    PT: 'palette'
+    PT: 'palette',
+    FR_CON: 'connectOnce'
   };
   /**
    * 客户端插件模式，随机端口
@@ -1329,7 +1331,7 @@
    */
 
   function detectorPlayeMode() {
-    const isPlus = getGlobalCache('mode');
+    const isPlus = getGlobalCache(GL_CACHE.TP);
     sessionStorage.setItem('_TEMP_PLAY_MODE', isPlus); // 是否本地插件播放 0是互联网模式，不走插件
 
     return isPlus;
@@ -1789,6 +1791,7 @@
   }) {
     const [openSliderVolume, setOpenSliderVolume] = React.useState(false);
     const [dep, setDep] = React.useState(Date.now());
+    const elRef = React.useRef(null);
     React.useEffect(() => {
       const updateRender = () => {
         setDep(Date.now());
@@ -1822,8 +1825,20 @@
       isHistory ? reloadHistory() : api.reload();
       event.emit(EventName.CLEAR_ERROR_TIMER);
     }, [event, isHistory, api]);
+    React.useEffect(() => {
+      // 点击其他地方隐藏输入框
+      elRef.current.handleClickOutside = e => {
+        if (!elRef.current.contains(e.target)) {
+          setOpenSliderVolume(false);
+        }
+      };
+
+      document.addEventListener('click', elRef.current.handleClickOutside);
+      return () => document.removeEventListener('click', elRef.current.handleClickOutside);
+    }, []);
     return /*#__PURE__*/React__default['default'].createElement("div", {
-      className: "contraller-left-bar"
+      className: "contraller-left-bar",
+      ref: elRef
     }, leftExtContents, /*#__PURE__*/React__default['default'].createElement(Bar, {
       visibel: !isLive
     }, /*#__PURE__*/React__default['default'].createElement(IconFont, {
@@ -1832,8 +1847,7 @@
       title: statusText
     })), /*#__PURE__*/React__default['default'].createElement(Bar, {
       className: `contraller-bar-volume ${sliderClassName}`,
-      onMouseOver: () => setOpenSliderVolume(true),
-      onMouseOut: () => setOpenSliderVolume(false)
+      onClick: () => setOpenSliderVolume(true)
     }, /*#__PURE__*/React__default['default'].createElement(IconFont, {
       onClick: mutedChantgeStatus,
       type: volumeIcon,
@@ -1871,6 +1885,8 @@
     const [contrastValue, setContrastValue] = React.useState(50);
     const [saturateValue, setSaturateValue] = React.useState(50);
     const [hueValue, setHueValue] = React.useState(0);
+    const elRef = React.useRef(null);
+    const [isPicker, setIsPicker] = React.useState(false);
     const brightness = React.useMemo(() => {
       const cv = brightnessValue / 50;
       if (cv == 1) return '';
@@ -1926,14 +1942,32 @@
       colorfilter({});
     };
 
+    const handleOpenPicker = data => {
+      setIsPicker(!isPicker);
+    };
+
+    React.useEffect(() => {
+      // 点击其他地方隐藏输入框
+      elRef.current.handleClickOutside = e => {
+        if (!elRef.current.contains(e.target)) {
+          setIsPicker(false);
+        }
+      };
+
+      document.addEventListener('click', elRef.current.handleClickOutside);
+      return () => document.removeEventListener('click', elRef.current.handleClickOutside);
+    }, []);
     return /*#__PURE__*/React__default['default'].createElement(Bar, {
       className: 'colorPicker'
+    }, /*#__PURE__*/React__default['default'].createElement("div", {
+      ref: elRef
     }, /*#__PURE__*/React__default['default'].createElement(IconFont, {
       title: '画面设置',
-      type: 'lm-player-S_Device_shezhi'
-    }), /*#__PURE__*/React__default['default'].createElement("div", {
+      type: 'lm-player-S_Device_shezhi',
+      onClick: handleOpenPicker
+    }), isPicker && /*#__PURE__*/React__default['default'].createElement("div", {
       class: "colorPicker-container"
-    }, /*#__PURE__*/React__default['default'].createElement("span", null, " \u89C6\u9891\u753B\u9762\u8BBE\u7F6E "), " ", /*#__PURE__*/React__default['default'].createElement("span", {
+    }, /*#__PURE__*/React__default['default'].createElement("span", null, " \u89C6\u9891\u753B\u9762\u8BBE\u7F6E "), /*#__PURE__*/React__default['default'].createElement("span", {
       className: "colorPicker-reset",
       onClick: handleResetChange
     }, "\xA0", /*#__PURE__*/React__default['default'].createElement(IconFont, {
@@ -1967,7 +2001,56 @@
       max: 360,
       onChange: handleHueChange,
       value: hueValue
-    }), /*#__PURE__*/React__default['default'].createElement("span", null, " ", hueValue, " "))));
+    }), /*#__PURE__*/React__default['default'].createElement("span", null, " ", hueValue, " ")))));
+  }
+
+  function ResolutionPicker({
+    switchResolution,
+    api,
+    name
+  }) {
+    const [isResolution, setIsResolution] = React.useState(false);
+    const resolutionRef = React.useRef(null); // 获取视频分辨率
+
+    const ratioValue = VIDEO_RESOLUTION; // 分辨率-默认显示
+
+    const [viewText, setViewText] = React.useState(findVideoAttribute(api.getResolution(), 'name'));
+
+    const handleOpenResolution = data => {
+      setIsResolution(!isResolution);
+    };
+
+    const setRatio = React.useCallback((...args) => {
+      setViewText(ratioValue[args].name);
+      switchResolution && switchResolution(ratioValue[args].resolution);
+    }, [api]);
+    React.useEffect(() => {
+      // 点击其他地方隐藏输入框
+      resolutionRef.current.handleClickOutside = e => {
+        if (!resolutionRef.current.contains(e.target)) {
+          setIsResolution(false);
+        }
+      };
+
+      document.addEventListener('click', resolutionRef.current.handleClickOutside);
+      return () => document.removeEventListener('click', resolutionRef.current.handleClickOutside);
+    }, []);
+    React.useEffect(() => {
+      setViewText(name);
+    }, [name]);
+    return /*#__PURE__*/React__default['default'].createElement(Bar, {
+      className: 'fl-menu-hc ',
+      onClick: handleOpenResolution
+    }, /*#__PURE__*/React__default['default'].createElement("div", {
+      ref: resolutionRef
+    }, /*#__PURE__*/React__default['default'].createElement("span", {
+      class: "fl-menu-hc-main"
+    }, viewText), isResolution && /*#__PURE__*/React__default['default'].createElement("ul", {
+      class: "fl-menu-hc-level"
+    }, Object.keys(ratioValue).map(item => ratioValue[item].show && /*#__PURE__*/React__default['default'].createElement("li", {
+      class: "fl-menu-hc-level-1",
+      onClick: () => setRatio(item)
+    }, ratioValue[item].name)))));
   }
 
   function RightBar({
@@ -1981,9 +2064,7 @@
     switchResolution,
     colorPicker
   }) {
-    const [dep, setDep] = React.useState(Date.now()); // 获取视频分辨率
-
-    const ratioValue = VIDEO_RESOLUTION; // 分辨率-默认显示
+    const [dep, setDep] = React.useState(Date.now()); // 分辨率-默认显示
 
     const [viewText, setViewText] = React.useState(findVideoAttribute(api.getResolution(), 'name')); // 控制调色盘显示
 
@@ -2022,10 +2103,6 @@
         api.setPosition(position, true);
       }
     }, [api, playContainer]);
-    const setRatio = React.useCallback((...args) => {
-      setViewText(ratioValue[args].name);
-      switchResolution && switchResolution(ratioValue[args].resolution);
-    }, [api]);
     return /*#__PURE__*/React__default['default'].createElement("div", {
       className: "contraller-right-bar"
     }, rightMidExtContents, scale && /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, /*#__PURE__*/React__default['default'].createElement(Bar, null, /*#__PURE__*/React__default['default'].createElement(IconFont, {
@@ -2042,16 +2119,26 @@
       type: 'lm-player-ZoomIn_Main'
     }))), isPalette && /*#__PURE__*/React__default['default'].createElement(ColorPicker, {
       colorfilter: colorPicker
-    }), isLive && isSwithRate && /*#__PURE__*/React__default['default'].createElement(Bar, {
-      className: 'fl-menu'
-    }, /*#__PURE__*/React__default['default'].createElement("span", {
-      class: "fl-menu-main"
-    }, viewText), /*#__PURE__*/React__default['default'].createElement("ul", {
-      class: "fl-menu-level"
-    }, Object.keys(ratioValue).map(item => ratioValue[item].show && /*#__PURE__*/React__default['default'].createElement("li", {
-      class: "fl-menu-level-1",
-      onClick: () => setRatio(item)
-    }, ratioValue[item].name)))), snapshot && /*#__PURE__*/React__default['default'].createElement(Bar, null, /*#__PURE__*/React__default['default'].createElement(IconFont, {
+    }), isLive && isSwithRate &&
+    /*#__PURE__*/
+    // <Bar className={'fl-menu-hc '} onClick={handleOpenResolution}>
+    //     <div ref={resolutionRef}>
+    //     <span class='fl-menu-hc-main'>{viewText}</span>
+    //     {isResolution && <ul class="fl-menu-hc-level">
+    //       {
+    //         Object.keys(ratioValue).map((item)=>(
+    //           ratioValue[item].show && (<li class="fl-menu-hc-level-1" onClick={() => setRatio(item)}>{ratioValue[item].name}</li>) 
+    //         ))
+    //       }
+    //     </ul>
+    //     }
+    //     </div>
+    // </Bar>
+    React__default['default'].createElement(ResolutionPicker, {
+      name: viewText,
+      switchResolution: switchResolution,
+      api: api
+    }), snapshot && /*#__PURE__*/React__default['default'].createElement(Bar, null, /*#__PURE__*/React__default['default'].createElement(IconFont, {
       title: "\u622A\u56FE",
       onClick: () => snapshot(api.snapshot()),
       type: "lm-player-SearchBox"
@@ -3124,7 +3211,7 @@
     }, connectStatus !== 2 ? /*#__PURE__*/React__default['default'].createElement("span", {
       className: "lm-player-message",
       style: {
-        fontSize: 24
+        fontSize: 18
       }
     }, "\u7B2C", connectCount, "\u6B21\u8FDE\u63A5\u4E2D\uFF0C\u8BF7\u7A0D\u5019...") : /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, /*#__PURE__*/React__default['default'].createElement(IconFont, {
       style: {
@@ -3153,6 +3240,10 @@
     const timer = React.useRef(null);
     const playerStatus = React.useRef(0);
     React.useEffect(() => {
+      if (!getGlobalCache(GL_CACHE.FR_CON)) {
+        updateStatus(1);
+      }
+
       return () => {
         timer && clearTimeout(timer);
       };
@@ -3173,8 +3264,6 @@
 
     return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, connectStatus == 1 ? /*#__PURE__*/React__default['default'].createElement(ZPlayer, _extends({
       errorNoticeHandle: () => {
-        console.warn('开流状态记录....' + playerStatus.current);
-
         if (playerStatus.current == 0) {
           console.warn('首次开流失败！');
           setConnectStatus(2);
