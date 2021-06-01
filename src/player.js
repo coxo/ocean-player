@@ -3,7 +3,7 @@ import VideoEvent from './event';
 import { getVideoType, createFlvPlayer, createHlsPlayer,detectorPlayeMode, decodeService, getScreenRate, installState,getGlobalCache } from './util';
 import ContrallerBar from './contraller_bar';
 import ContrallerEvent from './event/contrallerEvent';
-import VideoMessage, { NoSource } from './message';
+import VideoMessage, { NoSource, ErrorContainer} from './message';
 import TimeLine from './time_line';
 import ErrorEvent from './event/errorEvent';
 import DragEvent from './event/dragEvent';
@@ -27,11 +27,7 @@ const ReConnection = ({connectHandle}) => {
           {children}
           <div className="lm-player-message-mask lm-player-mask-loading-animation">
             {
-              connectStatus !== 2 ? <span  className="lm-player-message" style={{ fontSize: 18 }}>第{ connectCount }次连接中，请稍候...</span> : 
-              <> 
-              <IconFont style={{ fontSize: 68, color: '#DBE1EA' }} type={'lm-player-M_Device_jiazaishibai'}/>
-              <span className="lm-player-message">连接失败<span className="refresh-action" onClick={()=> connectHandle()}>刷新重试</span></span>
-              </>
+              connectStatus == 0 && <span  className="lm-player-message" style={{ fontSize: 18 }}>第{ connectCount }次连接中，请稍候...</span>
             }
           </div>
         </div>
@@ -65,8 +61,12 @@ function SinglePlayer({...props}){
   }
 
   const reconnectHandle = ()=>{
+    setConnectStatus(0)
     setConnectCount(0)
-    setConnectStatus(1)
+    timer.current = setTimeout(()=>{
+      // 连接
+      setConnectStatus(1)
+   })
   }
 
   const updateStatus = (status)=>{
@@ -74,7 +74,7 @@ function SinglePlayer({...props}){
   }
 
   return (<>
-    {connectStatus == 1 ? 
+    {connectStatus !== 0 ? 
     <ZPlayer
     errorNoticeHandle={()=>{
       if(playerStatus.current == 0){
@@ -100,17 +100,24 @@ function SinglePlayer({...props}){
           setConnectStatus(1)
         }, 1000*1)
       }else{
-        // 结束连接
-        setConnectStatus(2)
+        setConnectStatus(0)
+        // 开启定时器-更新连接状态
+        timer.current = setTimeout(()=>{
+            // 结束连接
+            setConnectStatus(2)
+         })
       }
    }}
    {...props}
    onStreamMounted={(data)=>{
     if(data.streamState == 1){
+      // 开流成功
       updateStatus(1)
     }
     props.onStreamMounted && props.onStreamMounted(data)
-  }}
+   }}
+    connectStatus={connectStatus}
+    reconnectHandle={reconnectHandle}
    >
    </ZPlayer> :     
    <CountContext.Provider value={{
@@ -156,25 +163,57 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
     },
     [file,resolution]
   );
-  useEffect(() => {
-    if (!file) {
-      return;
+
+  /**
+   * 销毁播放器事件对象
+   * @param {*} player 
+   */
+  const destroyEvent=(player)=>{
+    if (player.event) {
+      player.event.destroy();
     }
-    const playerObject = {
-      playContainer: playContainerRef.current,
-      video: playContainerRef.current.querySelector('video'),
-      resolution: resolution,
-      screenNum: screenNum,
-      playeMode : detectorPlayeMode(),
-      deviceInfo: deviceInfo,
-      stream : 0
-    };
+  }
+
+  /**
+   * 创建播放器事件器
+   * @param {*} player 
+   * @returns 
+   */
+  const createEvent=(player = {})=>{
+    return new VideoEvent(player.video)
+  }
+
+  /**
+   * 销毁播放器API对象
+   * @param {}} player 
+   */
+  const destroyApi=(player)=>{
+    if (player.api) {
+      player.api.destroy();
+    }
+  }
+
+  /**
+   * 创建播放器API对象
+   * @param {*} player 
+   * @returns 
+   */
+  const createApi=(player = {})=>{
+    return new Api(player)
+  }
+
+  const createPlayServer = (player = {} , file , playStatus = 1)=>{
+    const { resolution, deviceInfo } = player
     let isInit = false;
+
+    // playStatus=2 播放出错情况
+    if(playStatus == 2) return
+
     const formartType = getVideoType(file);
     if (formartType === 'flv' || type === 'flv') {
       isInit = true;
       try{
-        playerObject.flv = createFlvPlayer(playerObject.video, { ...props, file: decodeService({file, resolution, deviceInfo}, onToken) });
+        player.flv = createFlvPlayer(player.video, { ...props, file: decodeService({file, resolution, deviceInfo}, onToken) });
       }catch(e) {
         console.error(e)
       }
@@ -182,22 +221,39 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
     if (formartType === 'm3u8' || type === 'hls') {
       isInit = true;
       try{
-        playerObject.hls = createHlsPlayer(playerObject.video, file);
+        player.hls = createHlsPlayer(player.video, file);
       }catch(e) {
         console.error(e)
       }
     }
     if (!isInit && (!['flv', 'm3u8'].includes(formartType) || type === 'native')) {
-      playerObject.video.src = file;
+      player.video.src = file;
     }
-    if (playerObject.event) {
-      playerObject.event.destroy();
+  }
+
+  useEffect(() => {
+    if (!file) {
+      return;
     }
-    playerObject.event = new VideoEvent(playerObject.video);
-    if (playerObject.api) {
-      playerObject.api.destroy();
-    }
-    playerObject.api = new Api(playerObject);
+
+    const playerObject = {
+      playContainer: playContainerRef.current,
+      video: playContainerRef.current.querySelector('video'),
+      resolution: resolution,
+      screenNum: screenNum,
+      playeMode : detectorPlayeMode(),
+      deviceInfo: deviceInfo,
+    };
+    const playStatus = props.connectStatus
+
+
+    createPlayServer(playerObject, file, playStatus)
+    destroyEvent(playerObject)
+    destroyApi(playerObject)
+
+    playerObject.event = createEvent(playerObject)
+    playerObject.api = createApi(playerObject);
+
     playerRef.current = playerObject;
     setPlayerObj(() => playerObject);
 
@@ -210,6 +266,7 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
     installState(function(){
       setInstall(true)
     })
+    // 开流状态 0 失败/未开流  1 开流成功
     props.onStreamMounted && props.onStreamMounted({streamState})
   }, [streamState]);
 
@@ -239,6 +296,8 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
         rightMidExtContents={props.rightMidExtContents}
         draggable={props.draggable}
         errorNoticeHandle={props.errorNoticeHandle}
+        connectStatus={props.connectStatus}
+        reconnectHandle={props.reconnectHandle}
       />
       {children}
     </div>
@@ -260,17 +319,20 @@ function VideoTools({
   install,
   colorPicker,
   setStreamState,
-  errorNoticeHandle
+  errorNoticeHandle,
+  connectStatus,
+  reconnectHandle
 }) {
   if (!playerObj) {
     return <NoSource install={install}/>;
   }
+
   return (
     <>
-      <VideoMessage api={playerObj.api} event={playerObj.event} setStreamState={setStreamState}/>
-      {draggable && <DragEvent playContainer={playerObj.playContainer} api={playerObj.api} event={playerObj.event} />}
+      {connectStatus == 2 ? <ErrorContainer reconnectHandle={reconnectHandle} /> : <VideoMessage api={playerObj?.api} event={playerObj?.event} setStreamState={setStreamState}/>}
+      {draggable && <DragEvent playContainer={playerObj?.playContainer} api={playerObj?.api} event={playerObj?.event} />}
       {!hideContrallerBar && (
-        <ContrallerEvent event={playerObj.event} playContainer={playerObj.playContainer}>
+        <ContrallerEvent event={playerObj?.event} playContainer={playerObj?.playContainer}>
           <ContrallerBar
             api={playerObj.api}
             event={playerObj.event}
@@ -325,7 +387,7 @@ SinglePlayer.defaultProps = {
   isLive: true,
   draggable: true,
   scale: true,
-  errorReloadTimer: 5,
+  errorReloadTimer: 2,
   muted: 'muted',
   autoPlay: true,
   playsInline: false,

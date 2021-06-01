@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import ContrallerBar from '../contraller_bar';
-import VideoMessage, { NoSource } from '../message';
+import VideoMessage, { NoSource } from './message';
 import HistoryTimeLine from './time_line_history';
 import ErrorEvent from './errorEvent';
 import DragEvent from '../event/dragEvent';

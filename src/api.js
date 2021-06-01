@@ -4,7 +4,7 @@ import lcStore from "./service/lcStore";
 
 let index = 0
 export default class Api {
-  constructor({ video, playContainer, event, flv, hls, resolution, screenNum, stream }) {
+  constructor({ video, playContainer, event, flv, hls, resolution, screenNum }) {
     this.player = video
     this.playContainer = playContainer
     this.flv = flv
@@ -16,8 +16,6 @@ export default class Api {
     this.resolution = resolution
     // 分屏数 其他模式为空
     this.screenNum = screenNum || 0
-    // 开流状态 0 失败/未开流  1 开流成功
-    this.stream = stream
   }
   /**
    * 播放器销毁后 动态跟新api下的flv，hls对象
@@ -298,9 +296,6 @@ export default class Api {
     lcStore.setStreamResolution(ratio)
   }
 
-  changeStream(stream){
-    this.stream = stream
-  }
 
     /**
    * 设置播放速率
@@ -346,8 +341,6 @@ export default class Api {
       __player: this.player,
       flv: this.flv,
       hls: this.hls,
-      stream: this.stream,
-      changeStream: this.changeStream.bind(this),
       restPlayRate: this.restPlayRate.bind(this),
       getPlayerIng: this.getPlayerIng.bind(this),
     }

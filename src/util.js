@@ -410,17 +410,14 @@ export function decodeService(player, onToken){
       url = tansDecoding(player)
       break;
     case 2:
-      url = serverDecoding(player)
+      url = serverDecoding(player)+ '&token=' + key
+      // 免责工具使用
+      onToken && onToken(key)
       break;
     default:
       url = browserDecoding(player)
       break;
   }
-
-  //url = url + '&token=' + key
-  // 免责工具使用
-  //onToken && onToken(key)
-
   return url
 }
 

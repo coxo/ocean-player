@@ -54,7 +54,7 @@ function LeftBar({ api, event, video, isHistory, reloadHistory, isLive, leftExtC
   useEffect(() => {
     // 点击其他地方隐藏输入框
     elRef.current.handleClickOutside = (e) =>{
-      if(!elRef.current.contains(e.target)){
+      if(!elRef.current?.contains(e.target)){
         setOpenSliderVolume(false)
       }
      }

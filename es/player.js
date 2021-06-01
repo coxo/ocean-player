@@ -1352,7 +1352,7 @@ function installState(callback) {
 }
 function decodeService(player, onToken) {
   const playeMode = detectorPlayeMode();
-  genuuid();
+  const key = genuuid();
   let url = '';
 
   switch (playeMode) {
@@ -1361,16 +1361,15 @@ function decodeService(player, onToken) {
       break;
 
     case 2:
-      url = serverDecoding(player);
+      url = serverDecoding(player) + '&token=' + key; // 免责工具使用
+
+      onToken && onToken(key);
       break;
 
     default:
       url = browserDecoding(player);
       break;
-  } //url = url + '&token=' + key
-  // 免责工具使用
-  //onToken && onToken(key)
-
+  }
 
   return url;
 }
@@ -1802,7 +1801,9 @@ function LeftBar({
   useEffect(() => {
     // 点击其他地方隐藏输入框
     elRef.current.handleClickOutside = e => {
-      if (!elRef.current.contains(e.target)) {
+      var _elRef$current;
+
+      if (!((_elRef$current = elRef.current) !== null && _elRef$current !== void 0 && _elRef$current.contains(e.target))) {
         setOpenSliderVolume(false);
       }
     };
@@ -1855,24 +1856,24 @@ function ColorPicker({
   api,
   colorfilter
 }) {
-  const [brightnessValue, setBrightnessValue] = useState(50);
-  const [contrastValue, setContrastValue] = useState(50);
-  const [saturateValue, setSaturateValue] = useState(50);
+  const [brightnessValue, setBrightnessValue] = useState(127);
+  const [contrastValue, setContrastValue] = useState(127);
+  const [saturateValue, setSaturateValue] = useState(127);
   const [hueValue, setHueValue] = useState(0);
   const elRef = useRef(null);
   const [isPicker, setIsPicker] = useState(false);
   const brightness = useMemo(() => {
-    const cv = brightnessValue / 50;
+    const cv = brightnessValue / 127;
     if (cv == 1) return '';
     return `brightness(${cv})`;
   }, [brightnessValue]);
   const contrast = useMemo(() => {
-    const cv = contrastValue / 50;
+    const cv = contrastValue / 127;
     if (cv == 1) return '';
     return `contrast(${cv})`;
   }, [contrastValue]);
   const saturate = useMemo(() => {
-    const cv = saturateValue / 50;
+    const cv = saturateValue / 127;
     if (cv == 1) return '';
     return `saturate(${cv})`;
   }, [saturateValue]);
@@ -1923,7 +1924,9 @@ function ColorPicker({
   useEffect(() => {
     // 点击其他地方隐藏输入框
     elRef.current.handleClickOutside = e => {
-      if (!elRef.current.contains(e.target)) {
+      var _elRef$current;
+
+      if (!((_elRef$current = elRef.current) !== null && _elRef$current !== void 0 && _elRef$current.contains(e.target))) {
         setIsPicker(false);
       }
     };
@@ -1951,21 +1954,21 @@ function ColorPicker({
     className: "colorPicker-container-control"
   }, /*#__PURE__*/React.createElement("span", null, " \u4EAE\u5EA6 "), " ", /*#__PURE__*/React.createElement(Slider$1, {
     min: 0,
-    max: 100,
+    max: 255,
     onChange: handleBrightnessChange,
     value: brightnessValue
   }), /*#__PURE__*/React.createElement("span", null, " ", brightnessValue, " ")), /*#__PURE__*/React.createElement("div", {
     className: "colorPicker-container-control"
   }, /*#__PURE__*/React.createElement("span", null, " \u5BF9\u6BD4\u5EA6 "), " ", /*#__PURE__*/React.createElement(Slider$1, {
     min: 0,
-    max: 100,
+    max: 255,
     onChange: handleContrastChange,
     value: contrastValue
   }), /*#__PURE__*/React.createElement("span", null, " ", contrastValue, " ")), /*#__PURE__*/React.createElement("div", {
     className: "colorPicker-container-control"
   }, /*#__PURE__*/React.createElement("span", null, " \u9971\u548C\u5EA6 "), " ", /*#__PURE__*/React.createElement(Slider$1, {
     min: 0,
-    max: 100,
+    max: 255,
     onChange: handleSaturateChange,
     value: saturateValue
   }), /*#__PURE__*/React.createElement("span", null, " ", saturateValue, " ")), /*#__PURE__*/React.createElement("div", {
@@ -2001,7 +2004,9 @@ function ResolutionPicker({
   useEffect(() => {
     // 点击其他地方隐藏输入框
     resolutionRef.current.handleClickOutside = e => {
-      if (!resolutionRef.current.contains(e.target)) {
+      var _resolutionRef$curren;
+
+      if (!((_resolutionRef$curren = resolutionRef.current) !== null && _resolutionRef$curren !== void 0 && _resolutionRef$curren.contains(e.target))) {
         setIsResolution(false);
       }
     };
@@ -2093,22 +2098,7 @@ function RightBar({
     type: 'lm-player-ZoomIn_Main'
   }))), isPalette && /*#__PURE__*/React.createElement(ColorPicker, {
     colorfilter: colorPicker
-  }), isLive && isSwithRate &&
-  /*#__PURE__*/
-  // <Bar className={'fl-menu-hc '} onClick={handleOpenResolution}>
-  //     <div ref={resolutionRef}>
-  //     <span class='fl-menu-hc-main'>{viewText}</span>
-  //     {isResolution && <ul class="fl-menu-hc-level">
-  //       {
-  //         Object.keys(ratioValue).map((item)=>(
-  //           ratioValue[item].show && (<li class="fl-menu-hc-level-1" onClick={() => setRatio(item)}>{ratioValue[item].name}</li>) 
-  //         ))
-  //       }
-  //     </ul>
-  //     }
-  //     </div>
-  // </Bar>
-  React.createElement(ResolutionPicker, {
+  }), isLive && isSwithRate && /*#__PURE__*/React.createElement(ResolutionPicker, {
     name: viewText,
     switchResolution: switchResolution,
     api: api
@@ -2249,7 +2239,7 @@ function ContrallerEvent({
   }) : child);
 }
 
-function VideoMessage({
+function VideoMessage$1({
   event,
   api,
   setStreamState
@@ -2361,7 +2351,25 @@ function VideoMessage({
   }, message));
 }
 
-const NoSource = ({
+const ErrorContainer = ({
+  reconnectHandle
+}) => {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "lm-player-message-mask lm-player-mask-loading-animation"
+  }, /*#__PURE__*/React.createElement(IconFont, {
+    style: {
+      fontSize: 68,
+      color: '#DBE1EA'
+    },
+    type: 'lm-player-M_Device_jiazaishibai'
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lm-player-message"
+  }, "\u8FDE\u63A5\u5931\u8D25", /*#__PURE__*/React.createElement("span", {
+    className: "refresh-action",
+    onClick: () => reconnectHandle()
+  }, "\u5237\u65B0\u91CD\u8BD5"))));
+};
+const NoSource$1 = ({
   install
 }) => {
   var _window$BSConfig;
@@ -2657,8 +2665,7 @@ class Api {
     flv,
     hls,
     resolution,
-    screenNum,
-    stream
+    screenNum
   }) {
     this.player = video;
     this.playContainer = playContainer;
@@ -2670,9 +2677,7 @@ class Api {
 
     this.resolution = resolution; // 分屏数 其他模式为空
 
-    this.screenNum = screenNum || 0; // 开流状态 0 失败/未开流  1 开流成功
-
-    this.stream = stream;
+    this.screenNum = screenNum || 0;
   }
   /**
    * 播放器销毁后 动态跟新api下的flv，hls对象
@@ -3025,10 +3030,6 @@ class Api {
   exeRatioCommand(ratio) {
     lcStore.setStreamResolution(ratio);
   }
-
-  changeStream(stream) {
-    this.stream = stream;
-  }
   /**
   * 设置播放速率
   * @param {*} rate
@@ -3075,8 +3076,6 @@ class Api {
       __player: this.player,
       flv: this.flv,
       hls: this.hls,
-      stream: this.stream,
-      changeStream: this.changeStream.bind(this),
       restPlayRate: this.restPlayRate.bind(this),
       getPlayerIng: this.getPlayerIng.bind(this)
     };
@@ -3182,23 +3181,12 @@ const ReConnection = ({
     className: "player-mask-layout"
   }, /*#__PURE__*/React.createElement("video", null)), children, /*#__PURE__*/React.createElement("div", {
     className: "lm-player-message-mask lm-player-mask-loading-animation"
-  }, connectStatus !== 2 ? /*#__PURE__*/React.createElement("span", {
+  }, connectStatus == 0 && /*#__PURE__*/React.createElement("span", {
     className: "lm-player-message",
     style: {
       fontSize: 18
     }
-  }, "\u7B2C", connectCount, "\u6B21\u8FDE\u63A5\u4E2D\uFF0C\u8BF7\u7A0D\u5019...") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IconFont, {
-    style: {
-      fontSize: 68,
-      color: '#DBE1EA'
-    },
-    type: 'lm-player-M_Device_jiazaishibai'
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "lm-player-message"
-  }, "\u8FDE\u63A5\u5931\u8D25", /*#__PURE__*/React.createElement("span", {
-    className: "refresh-action",
-    onClick: () => connectHandle()
-  }, "\u5237\u65B0\u91CD\u8BD5"))))));
+  }, "\u7B2C", connectCount, "\u6B21\u8FDE\u63A5\u4E2D\uFF0C\u8BF7\u7A0D\u5019..."))));
 };
 /**
  * 播放控件容器
@@ -3228,15 +3216,19 @@ function SinglePlayer({ ...props
   };
 
   const reconnectHandle = () => {
+    setConnectStatus(0);
     setConnectCount(0);
-    setConnectStatus(1);
+    timer.current = setTimeout(() => {
+      // 连接
+      setConnectStatus(1);
+    });
   };
 
   const updateStatus = status => {
     playerStatus.current = status;
   };
 
-  return /*#__PURE__*/React.createElement(React.Fragment, null, connectStatus == 1 ? /*#__PURE__*/React.createElement(ZPlayer, _extends({
+  return /*#__PURE__*/React.createElement(React.Fragment, null, connectStatus !== 0 ? /*#__PURE__*/React.createElement(ZPlayer, _extends({
     errorNoticeHandle: () => {
       if (playerStatus.current == 0) {
         console.warn('首次开流失败！');
@@ -3261,18 +3253,25 @@ function SinglePlayer({ ...props
           setConnectStatus(1);
         }, 1000 * 1);
       } else {
-        // 结束连接
-        setConnectStatus(2);
+        setConnectStatus(0); // 开启定时器-更新连接状态
+
+        timer.current = setTimeout(() => {
+          // 结束连接
+          setConnectStatus(2);
+        });
       }
     }
   }, props, {
     onStreamMounted: data => {
       if (data.streamState == 1) {
+        // 开流成功
         updateStatus(1);
       }
 
       props.onStreamMounted && props.onStreamMounted(data);
-    }
+    },
+    connectStatus: connectStatus,
+    reconnectHandle: reconnectHandle
   })) : /*#__PURE__*/React.createElement(CountContext.Provider, {
     value: {
       connectStatus,
@@ -3328,28 +3327,63 @@ function ZPlayer({
 
     playerRef.current = null;
   }, [file, resolution]);
-  useEffect(() => {
-    if (!file) {
-      return;
-    }
+  /**
+   * 销毁播放器事件对象
+   * @param {*} player 
+   */
 
-    const playerObject = {
-      playContainer: playContainerRef.current,
-      video: playContainerRef.current.querySelector('video'),
-      resolution: resolution,
-      screenNum: screenNum,
-      playeMode: detectorPlayeMode(),
-      deviceInfo: deviceInfo,
-      stream: 0
-    };
-    let isInit = false;
+  const destroyEvent = player => {
+    if (player.event) {
+      player.event.destroy();
+    }
+  };
+  /**
+   * 创建播放器事件器
+   * @param {*} player 
+   * @returns 
+   */
+
+
+  const createEvent = (player = {}) => {
+    return new VideoEventInstance(player.video);
+  };
+  /**
+   * 销毁播放器API对象
+   * @param {}} player 
+   */
+
+
+  const destroyApi = player => {
+    if (player.api) {
+      player.api.destroy();
+    }
+  };
+  /**
+   * 创建播放器API对象
+   * @param {*} player 
+   * @returns 
+   */
+
+
+  const createApi = (player = {}) => {
+    return new Api(player);
+  };
+
+  const createPlayServer = (player = {}, file, playStatus = 1) => {
+    const {
+      resolution,
+      deviceInfo
+    } = player;
+    let isInit = false; // playStatus=2 播放出错情况
+
+    if (playStatus == 2) return;
     const formartType = getVideoType(file);
 
     if (formartType === 'flv' || type === 'flv') {
       isInit = true;
 
       try {
-        playerObject.flv = createFlvPlayer(playerObject.video, { ...props,
+        player.flv = createFlvPlayer(player.video, { ...props,
           file: decodeService({
             file,
             resolution,
@@ -3365,27 +3399,36 @@ function ZPlayer({
       isInit = true;
 
       try {
-        playerObject.hls = createHlsPlayer(playerObject.video, file);
+        player.hls = createHlsPlayer(player.video, file);
       } catch (e) {
         console.error(e);
       }
     }
 
     if (!isInit && (!['flv', 'm3u8'].includes(formartType) || type === 'native')) {
-      playerObject.video.src = file;
+      player.video.src = file;
+    }
+  };
+
+  useEffect(() => {
+    if (!file) {
+      return;
     }
 
-    if (playerObject.event) {
-      playerObject.event.destroy();
-    }
-
-    playerObject.event = new VideoEventInstance(playerObject.video);
-
-    if (playerObject.api) {
-      playerObject.api.destroy();
-    }
-
-    playerObject.api = new Api(playerObject);
+    const playerObject = {
+      playContainer: playContainerRef.current,
+      video: playContainerRef.current.querySelector('video'),
+      resolution: resolution,
+      screenNum: screenNum,
+      playeMode: detectorPlayeMode(),
+      deviceInfo: deviceInfo
+    };
+    const playStatus = props.connectStatus;
+    createPlayServer(playerObject, file, playStatus);
+    destroyEvent(playerObject);
+    destroyApi(playerObject);
+    playerObject.event = createEvent(playerObject);
+    playerObject.api = createApi(playerObject);
     playerRef.current = playerObject;
     setPlayerObj(() => playerObject);
 
@@ -3396,7 +3439,8 @@ function ZPlayer({
   useEffect(() => {
     installState(function () {
       setInstall(true);
-    });
+    }); // 开流状态 0 失败/未开流  1 开流成功
+
     props.onStreamMounted && props.onStreamMounted({
       streamState
     });
@@ -3437,7 +3481,9 @@ function ZPlayer({
     rightExtContents: props.rightExtContents,
     rightMidExtContents: props.rightMidExtContents,
     draggable: props.draggable,
-    errorNoticeHandle: props.errorNoticeHandle
+    errorNoticeHandle: props.errorNoticeHandle,
+    connectStatus: props.connectStatus,
+    reconnectHandle: props.reconnectHandle
   }), children);
 }
 
@@ -3456,25 +3502,29 @@ function VideoTools$1({
   install,
   colorPicker,
   setStreamState,
-  errorNoticeHandle
+  errorNoticeHandle,
+  connectStatus,
+  reconnectHandle
 }) {
   if (!playerObj) {
-    return /*#__PURE__*/React.createElement(NoSource, {
+    return /*#__PURE__*/React.createElement(NoSource$1, {
       install: install
     });
   }
 
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(VideoMessage, {
-    api: playerObj.api,
-    event: playerObj.event,
+  return /*#__PURE__*/React.createElement(React.Fragment, null, connectStatus == 2 ? /*#__PURE__*/React.createElement(ErrorContainer, {
+    reconnectHandle: reconnectHandle
+  }) : /*#__PURE__*/React.createElement(VideoMessage$1, {
+    api: playerObj === null || playerObj === void 0 ? void 0 : playerObj.api,
+    event: playerObj === null || playerObj === void 0 ? void 0 : playerObj.event,
     setStreamState: setStreamState
   }), draggable && /*#__PURE__*/React.createElement(DragEvent, {
-    playContainer: playerObj.playContainer,
-    api: playerObj.api,
-    event: playerObj.event
+    playContainer: playerObj === null || playerObj === void 0 ? void 0 : playerObj.playContainer,
+    api: playerObj === null || playerObj === void 0 ? void 0 : playerObj.api,
+    event: playerObj === null || playerObj === void 0 ? void 0 : playerObj.event
   }), !hideContrallerBar && /*#__PURE__*/React.createElement(ContrallerEvent, {
-    event: playerObj.event,
-    playContainer: playerObj.playContainer
+    event: playerObj === null || playerObj === void 0 ? void 0 : playerObj.event,
+    playContainer: playerObj === null || playerObj === void 0 ? void 0 : playerObj.playContainer
   }, /*#__PURE__*/React.createElement(ContrallerBar, {
     api: playerObj.api,
     event: playerObj.event,
@@ -3537,13 +3587,172 @@ SinglePlayer.defaultProps = {
   isLive: true,
   draggable: true,
   scale: true,
-  errorReloadTimer: 5,
+  errorReloadTimer: 2,
   muted: 'muted',
   autoPlay: true,
   playsInline: false,
   preload: 'auto',
   loop: false,
   hideContrallerBar: false
+};
+
+function VideoMessage({
+  event,
+  api,
+  setStreamState
+}) {
+  const [state, setState] = useState({
+    status: null,
+    errorTimer: null,
+    loading: false
+  });
+  const message = useMemo(() => {
+    if (!state.status) {
+      return '';
+    }
+
+    if (state.status === 'fail') {
+      return '视频错误';
+    }
+
+    if (state.status === 'reload') {
+      if (!state.errorTimer) {
+        return `视频加载错误，正在进行重连...`;
+      }
+
+      return `视频加载错误，正在进行重连第${state.errorTimer}次重连`;
+    }
+  }, [state.errorTimer, state.status]);
+  useEffect(() => {
+    const openStartLoading = () => setState(old => ({ ...old,
+      loading: true
+    }));
+
+    const openWaitLoading = () => setState(old => ({ ...old
+    }));
+
+    const openSeekLoading = () => setState(old => ({ ...old,
+      loading: true
+    }));
+
+    const canplayLoading = () => (setState(old => ({ ...old,
+      loading: false
+    })), setStreamState && setStreamState(1));
+
+    const closeLoading = () => setState(old => ({ ...old,
+      loading: false
+    }));
+
+    const errorReload = timer => setState(() => ({
+      status: 'reload',
+      errorTimer: timer,
+      loading: true
+    }));
+
+    const reloadFail = () => setState(old => ({ ...old,
+      status: 'fail',
+      loading: false
+    }));
+
+    const reloadSuccess = () => setState(old => ({ ...old,
+      status: null,
+      loading: false
+    }));
+
+    const reload = () => setState(old => ({ ...old,
+      status: 'reload',
+      loading: true
+    }));
+
+    const playEnd = () => (setState(old => ({ ...old,
+      status: null,
+      loading: false
+    })), api.pause());
+
+    event.addEventListener('loadstart', openStartLoading);
+    event.addEventListener('waiting', openWaitLoading);
+    event.addEventListener('seeking', openSeekLoading);
+    event.addEventListener('loadeddata', closeLoading);
+    event.addEventListener('canplay', canplayLoading);
+    event.on(EventName.ERROR_RELOAD, errorReload);
+    event.on(EventName.RELOAD_FAIL, reloadFail);
+    event.on(EventName.RELOAD_SUCCESS, reloadSuccess);
+    event.on(EventName.RELOAD, reload);
+    event.on(EventName.HISTORY_PLAY_END, playEnd);
+    event.on(EventName.CLEAR_ERROR_TIMER, reloadSuccess);
+    return () => {
+      event.removeEventListener('loadstart', openStartLoading);
+      event.removeEventListener('waiting', openWaitLoading);
+      event.removeEventListener('seeking', openSeekLoading);
+      event.removeEventListener('loadeddata', closeLoading);
+      event.removeEventListener('canplay', canplayLoading);
+      event.off(EventName.ERROR_RELOAD, errorReload);
+      event.off(EventName.RELOAD_FAIL, reloadFail);
+      event.off(EventName.RELOAD_SUCCESS, reloadSuccess);
+      event.off(EventName.RELOAD, reload);
+      event.off(EventName.HISTORY_PLAY_END, playEnd);
+      event.off(EventName.CLEAR_ERROR_TIMER, reloadSuccess);
+    };
+  }, [event]);
+  const {
+    loading,
+    status
+  } = state;
+  return /*#__PURE__*/React.createElement("div", {
+    className: `lm-player-message-mask ${loading || status === 'fail' ? 'lm-player-mask-loading-animation' : ''}`
+  }, /*#__PURE__*/React.createElement(IconFont, {
+    type: status === 'fail' ? 'lm-player-YesorNo_No_Dark' : 'lm-player-Loading',
+    className: `${loading && status !== 'fail' ? 'lm-player-loading-animation' : status === 'fail' ? 'lm-player-loadfail' : ''} lm-player-loading-icon`
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lm-player-message"
+  }, message));
+}
+
+const NoSource = ({
+  install
+}) => {
+  var _window$BSConfig;
+
+  const _TEMP_PLAY_CODE = sessionStorage.getItem('_TEMP_PLAY_CODE'); // const _TEMP_PLAY_PATH = sessionStorage.getItem('_TEMP_PLAY_PATH')
+
+
+  const _APP_PLAY_VERSION = sessionStorage.getItem('_APP_PLAY_VERSION');
+
+  const _TEMP_PLAY_PATH = ((_window$BSConfig = window.BSConfig) === null || _window$BSConfig === void 0 ? void 0 : _window$BSConfig.playerDownloadUrl) || localStorage.getItem('ZVPlayerUrl');
+
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm-player-message-mask lm-player-mask-loading-animation"
+  }, /*#__PURE__*/React.createElement(IconFont, {
+    style: {
+      fontSize: 80
+    },
+    type: "lm-player-PlaySource",
+    title: "\u8BF7\u9009\u62E9\u89C6\u9891\u6E90"
+  }), _TEMP_PLAY_CODE == '20000' && /*#__PURE__*/React.createElement("span", {
+    className: "lm-player-message"
+  }, "\u8BF7", /*#__PURE__*/React.createElement("a", {
+    className: "install-link",
+    target: "_blank",
+    href: _TEMP_PLAY_PATH,
+    style: {
+      pointerEvents: 'all',
+      textDecoration: 'none'
+    },
+    download: "ZVPlayer.exe",
+    rel: "noopener noreferrer"
+  }, "\u4E0B\u8F7D"), "\u64AD\u653E\u63D2\u4EF6"), _TEMP_PLAY_CODE == '10001' && /*#__PURE__*/React.createElement("span", {
+    className: "lm-player-message"
+  }, "\u5F53\u524D\u64AD\u653E\u63D2\u4EF6\u7248\u672C\u4F4E\uFF0C\u5EFA\u8BAE\u60A8\u5347\u7EA7\u6700\u65B0\u7248\u672C", /*#__PURE__*/React.createElement("a", {
+    target: "_blank",
+    href: _TEMP_PLAY_PATH,
+    style: {
+      pointerEvents: 'all',
+      textDecoration: 'none'
+    },
+    download: "ZVPlayer.exe",
+    rel: "noopener noreferrer",
+    className: "install-link"
+  }, _APP_PLAY_VERSION)));
 };
 
 const computedIndexFormTime = (historyList, time) => {

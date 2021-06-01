@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import IconFont from './iconfont'
-import EventName from './event/eventName'
-import './style/message.less'
+import IconFont from '../iconfont'
+import EventName from '../event/eventName'
+import '../style/message.less'
 
 function VideoMessage({ event, api , setStreamState}) {
   const [state, setState] = useState({ status: null, errorTimer: null, loading: false })
@@ -70,17 +70,6 @@ function VideoMessage({ event, api , setStreamState}) {
       <span className="lm-player-message">{message}</span>
     </div>
   )
-}
-
-export const ErrorContainer = ({reconnectHandle}) => {
-    return (
-      <>
-        <div className="lm-player-message-mask lm-player-mask-loading-animation">
-          <IconFont style={{ fontSize: 68, color: '#DBE1EA' }} type={'lm-player-M_Device_jiazaishibai'}/>
-           <span className="lm-player-message">连接失败<span className="refresh-action" onClick={()=> reconnectHandle()}>刷新重试</span></span>
-         </div>
-      </>
-    )
 }
 
 export const NoSource = ({ install }) => {

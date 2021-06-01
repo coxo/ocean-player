@@ -73,19 +73,6 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
       )}
       {isPalette && (<ColorPicker colorfilter={colorPicker}></ColorPicker>)}
       {isLive && isSwithRate && (
-        // <Bar className={'fl-menu-hc '} onClick={handleOpenResolution}>
-        //     <div ref={resolutionRef}>
-        //     <span class='fl-menu-hc-main'>{viewText}</span>
-        //     {isResolution && <ul class="fl-menu-hc-level">
-        //       {
-        //         Object.keys(ratioValue).map((item)=>(
-        //           ratioValue[item].show && (<li class="fl-menu-hc-level-1" onClick={() => setRatio(item)}>{ratioValue[item].name}</li>) 
-        //         ))
-        //       }
-        //     </ul>
-        //     }
-        //     </div>
-        // </Bar>
         <ResolutionPicker name={viewText} switchResolution={switchResolution} api={api}/>
       )}
       

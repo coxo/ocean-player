@@ -4,29 +4,29 @@ import Bar from './bar'
 import { Slider } from 'antd'
 
 function ColorPicker({ playContainer, api, colorfilter }) {
-  const [brightnessValue, setBrightnessValue] = useState(50)
-  const [contrastValue, setContrastValue] = useState(50)
-  const [saturateValue, setSaturateValue] = useState(50)
+  const [brightnessValue, setBrightnessValue] = useState(127)
+  const [contrastValue, setContrastValue] = useState(127)
+  const [saturateValue, setSaturateValue] = useState(127)
   const [hueValue, setHueValue] = useState(0)
 
   const elRef = useRef(null)
   const [isPicker, setIsPicker] = useState(false)
 
   const brightness = useMemo(() => {
-      const cv = brightnessValue/50
+      const cv = brightnessValue/127
       if(cv == 1) return ''
       return `brightness(${cv})`
   }, [brightnessValue]);
 
   
   const contrast = useMemo(() => {
-    const cv = contrastValue/50
+    const cv = contrastValue/127
     if(cv == 1) return ''
     return `contrast(${cv})`
    }, [contrastValue]);
 
    const saturate = useMemo(() => {
-    const cv = saturateValue/50
+    const cv = saturateValue/127
     if(cv == 1) return ''
     return `saturate(${cv})`
    }, [saturateValue]);
@@ -78,7 +78,7 @@ function ColorPicker({ playContainer, api, colorfilter }) {
   useEffect(() => {
     // 点击其他地方隐藏输入框
     elRef.current.handleClickOutside = (e) =>{
-      if(!elRef.current.contains(e.target)){
+      if(!elRef.current?.contains(e.target)){
        setIsPicker(false)
       }
      }
@@ -96,13 +96,13 @@ function ColorPicker({ playContainer, api, colorfilter }) {
         <span> 视频画面设置 </span> 
         <span className='colorPicker-reset' onClick={handleResetChange}>&nbsp;<IconFont title={'重置'} type={'lm-player-Refresh_Main'} />重置 </span>
         <div className="colorPicker-container-control">
-          <span> 亮度 </span> <Slider min={0} max={100} onChange={handleBrightnessChange} value={ brightnessValue }  /><span> {brightnessValue} </span>
+          <span> 亮度 </span> <Slider min={0} max={255} onChange={handleBrightnessChange} value={ brightnessValue }  /><span> {brightnessValue} </span>
         </div>
         <div className="colorPicker-container-control">
-          <span> 对比度 </span> <Slider min={0} max={100} onChange={handleContrastChange} value={ contrastValue }  /><span> {contrastValue} </span>
+          <span> 对比度 </span> <Slider min={0} max={255} onChange={handleContrastChange} value={ contrastValue }  /><span> {contrastValue} </span>
         </div>
         <div className="colorPicker-container-control">
-          <span> 饱和度 </span> <Slider min={0} max={100} onChange={handleSaturateChange} value={ saturateValue }  /><span> {saturateValue} </span>
+          <span> 饱和度 </span> <Slider min={0} max={255} onChange={handleSaturateChange} value={ saturateValue }  /><span> {saturateValue} </span>
         </div>
         <div className="colorPicker-container-control hue-horizontal">
           <span> 色调 </span> <Slider min={0} max={360} onChange={handleHueChange} value={ hueValue } /><span> {hueValue} </span>
