@@ -3,9 +3,9 @@ import Bar from './bar'
 import { findVideoAttribute} from '../util'
 import {VIDEO_RESOLUTION} from '../constant'
 
-function ResolutionPicker({ switchResolution, api, name }) {
+function ResolutionPicker({ switchResolution, api, name, hideBar }) {
   const [isResolution, setIsResolution] = useState(false)
-  const resolutionRef = useRef(null)
+  const resolutionRef = useRef()
     
     // 获取视频分辨率
   const ratioValue = VIDEO_RESOLUTION
@@ -13,7 +13,7 @@ function ResolutionPicker({ switchResolution, api, name }) {
   const [viewText, setViewText] = useState(findVideoAttribute(api.getResolution(),'name'));
 
   const handleOpenResolution = data => {
-      setIsResolution(!isResolution)
+    setIsResolution(!isResolution)
   }
   const setRatio = useCallback((...args) => {
         setViewText(ratioValue[args].name)
@@ -22,14 +22,15 @@ function ResolutionPicker({ switchResolution, api, name }) {
 
   useEffect(() => {
         // 点击其他地方隐藏输入框
-        resolutionRef.current.handleClickOutside = (e) =>{
-          if(!resolutionRef.current?.contains(e.target)){
-            setIsResolution(false)
-          }
-         }
-        document.addEventListener('click', resolutionRef.current.handleClickOutside);
-        return () => document.removeEventListener('click', resolutionRef.current.handleClickOutside);
-  }, [])
+        // const handleClickOutside = (e) =>{
+        //   if(!resolutionRef.current?.contains(e.target)){
+        //     setIsResolution(false)
+        //   }
+        //  }
+        // document.querySelector(":root").addEventListener('click', handleClickOutside)
+        // return () => document.querySelector(":root").removeEventListener('click', handleClickOutside);
+        setIsResolution(false)
+  }, [hideBar])
 
   useEffect(() => {
       setViewText(name)

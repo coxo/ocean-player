@@ -1786,11 +1786,13 @@
     reloadHistory,
     isLive,
     leftExtContents,
-    leftMidExtContents
+    leftMidExtContents,
+    hideBar,
+    setHideBar
   }) {
-    const [openSliderVolume, setOpenSliderVolume] = React.useState(false);
+    const [openSliderVolume, setOpenSliderVolume] = React.useState(hideBar);
     const [dep, setDep] = React.useState(Date.now());
-    const elRef = React.useRef(null);
+    const elRef = React.useRef();
     React.useEffect(() => {
       const updateRender = () => {
         setDep(Date.now());
@@ -1825,18 +1827,8 @@
       event.emit(EventName.CLEAR_ERROR_TIMER);
     }, [event, isHistory, api]);
     React.useEffect(() => {
-      // 点击其他地方隐藏输入框
-      elRef.current.handleClickOutside = e => {
-        var _elRef$current;
-
-        if (!((_elRef$current = elRef.current) !== null && _elRef$current !== void 0 && _elRef$current.contains(e.target))) {
-          setOpenSliderVolume(false);
-        }
-      };
-
-      document.addEventListener('click', elRef.current.handleClickOutside);
-      return () => document.removeEventListener('click', elRef.current.handleClickOutside);
-    }, []);
+      setOpenSliderVolume(false);
+    }, [hideBar]);
     return /*#__PURE__*/React__default['default'].createElement("div", {
       className: "contraller-left-bar",
       ref: elRef
@@ -1880,13 +1872,14 @@
   function ColorPicker({
     playContainer,
     api,
-    colorfilter
+    colorfilter,
+    hideBar
   }) {
     const [brightnessValue, setBrightnessValue] = React.useState(127);
     const [contrastValue, setContrastValue] = React.useState(127);
     const [saturateValue, setSaturateValue] = React.useState(127);
     const [hueValue, setHueValue] = React.useState(0);
-    const elRef = React.useRef(null);
+    const elRef = React.useRef();
     const [isPicker, setIsPicker] = React.useState(false);
     const brightness = React.useMemo(() => {
       const cv = brightnessValue / 127;
@@ -1949,17 +1942,15 @@
 
     React.useEffect(() => {
       // 点击其他地方隐藏输入框
-      elRef.current.handleClickOutside = e => {
-        var _elRef$current;
-
-        if (!((_elRef$current = elRef.current) !== null && _elRef$current !== void 0 && _elRef$current.contains(e.target))) {
-          setIsPicker(false);
-        }
-      };
-
-      document.addEventListener('click', elRef.current.handleClickOutside);
-      return () => document.removeEventListener('click', elRef.current.handleClickOutside);
-    }, []);
+      // elRef.current.handleClickOutside = (e) =>{
+      //   if(!elRef.current?.contains(e.target)){
+      //    setIsPicker(false)
+      //   }
+      //  }
+      // document.addEventListener('click', elRef.current.handleClickOutside);
+      // return () => document.removeEventListener('click', elRef.current.handleClickOutside);
+      setIsPicker(false);
+    }, [hideBar]);
     return /*#__PURE__*/React__default['default'].createElement(Bar, {
       className: 'colorPicker'
     }, /*#__PURE__*/React__default['default'].createElement("div", {
@@ -2010,10 +2001,11 @@
   function ResolutionPicker({
     switchResolution,
     api,
-    name
+    name,
+    hideBar
   }) {
     const [isResolution, setIsResolution] = React.useState(false);
-    const resolutionRef = React.useRef(null); // 获取视频分辨率
+    const resolutionRef = React.useRef(); // 获取视频分辨率
 
     const ratioValue = VIDEO_RESOLUTION; // 分辨率-默认显示
 
@@ -2029,17 +2021,15 @@
     }, [api]);
     React.useEffect(() => {
       // 点击其他地方隐藏输入框
-      resolutionRef.current.handleClickOutside = e => {
-        var _resolutionRef$curren;
-
-        if (!((_resolutionRef$curren = resolutionRef.current) !== null && _resolutionRef$curren !== void 0 && _resolutionRef$curren.contains(e.target))) {
-          setIsResolution(false);
-        }
-      };
-
-      document.addEventListener('click', resolutionRef.current.handleClickOutside);
-      return () => document.removeEventListener('click', resolutionRef.current.handleClickOutside);
-    }, []);
+      // const handleClickOutside = (e) =>{
+      //   if(!resolutionRef.current?.contains(e.target)){
+      //     setIsResolution(false)
+      //   }
+      //  }
+      // document.querySelector(":root").addEventListener('click', handleClickOutside)
+      // return () => document.querySelector(":root").removeEventListener('click', handleClickOutside);
+      setIsResolution(false);
+    }, [hideBar]);
     React.useEffect(() => {
       setViewText(name);
     }, [name]);
@@ -2067,7 +2057,8 @@
     rightMidExtContents,
     isLive,
     switchResolution,
-    colorPicker
+    colorPicker,
+    hideBar
   }) {
     const [dep, setDep] = React.useState(Date.now()); // 分辨率-默认显示
 
@@ -2123,11 +2114,13 @@
       onClick: () => setScale(0.2),
       type: 'lm-player-ZoomIn_Main'
     }))), isPalette && /*#__PURE__*/React__default['default'].createElement(ColorPicker, {
-      colorfilter: colorPicker
+      colorfilter: colorPicker,
+      hideBar: hideBar
     }), isLive && isSwithRate && /*#__PURE__*/React__default['default'].createElement(ResolutionPicker, {
       name: viewText,
       switchResolution: switchResolution,
-      api: api
+      api: api,
+      hideBar: hideBar
     }), snapshot && /*#__PURE__*/React__default['default'].createElement(Bar, null, /*#__PURE__*/React__default['default'].createElement(IconFont, {
       title: "\u622A\u56FE",
       onClick: () => snapshot(api.snapshot()),
@@ -2195,7 +2188,8 @@
     isLive,
     leftExtContents,
     leftMidExtContents,
-    colorPicker
+    colorPicker,
+    hideBar
   }) {
     return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, /*#__PURE__*/React__default['default'].createElement("div", {
       className: `contraller-bar-layout ${!visibel ? 'hide-contraller-bar' : ''}`
@@ -2207,7 +2201,8 @@
       reloadHistory: reloadHistory,
       isLive: isLive,
       leftMidExtContents: leftMidExtContents,
-      leftExtContents: leftExtContents
+      leftExtContents: leftExtContents,
+      hideBar: hideBar
     }), /*#__PURE__*/React__default['default'].createElement(RightBar, {
       api: api,
       event: event,
@@ -2217,7 +2212,8 @@
       colorPicker: colorPicker,
       switchResolution: switchResolution,
       rightExtContents: rightExtContents,
-      rightMidExtContents: rightMidExtContents
+      rightMidExtContents: rightMidExtContents,
+      hideBar: hideBar
     })), /*#__PURE__*/React__default['default'].createElement("div", {
       className: `contraller-scale-layout ${!visibel ? 'hide-contraller-bar' : ''}`
     }, /*#__PURE__*/React__default['default'].createElement(ScaleBar, {
@@ -3332,7 +3328,8 @@
     const rate = React.useMemo(() => getScreenRate(screenNum), [screenNum]);
     const [resolution, setResolution] = React.useState(rate);
     const [colorPicker, setColorPicker] = React.useState(null);
-    const [install, setInstall] = React.useState(false); // 开流状态 0 失败/未开流  1 开流成功
+    const [install, setInstall] = React.useState(false);
+    const [hideBar, setHideBar] = React.useState(false); // 开流状态 0 失败/未开流  1 开流成功
 
     const [streamState, setStreamState] = React.useState(0);
 
@@ -3471,9 +3468,20 @@
         streamState
       });
     }, [streamState]);
+    /**
+     * 创建播放器事件器
+     * @param {*} player 
+     * @returns 
+     */
+
+    const mosLeaveHandler = (e = {}) => {
+      setHideBar(Math.round(Math.random() * 100));
+    };
+
     return /*#__PURE__*/React__default['default'].createElement("div", {
       className: `lm-player-container ${className}`,
-      ref: playContainerRef
+      ref: playContainerRef,
+      onMouseLeave: mosLeaveHandler
     }, /*#__PURE__*/React__default['default'].createElement("div", {
       className: "player-mask-layout"
     }, /*#__PURE__*/React__default['default'].createElement("video", {
@@ -3500,6 +3508,7 @@
       colorPicker: value => {
         setColorPicker(value);
       },
+      hideBar: hideBar,
       setStreamState: setStreamState,
       snapshot: props.snapshot,
       leftExtContents: props.leftExtContents,
@@ -3530,7 +3539,8 @@
     setStreamState,
     errorNoticeHandle,
     connectStatus,
-    reconnectHandle
+    reconnectHandle,
+    hideBar
   }) {
     if (!playerObj) {
       return /*#__PURE__*/React__default['default'].createElement(NoSource$1, {
@@ -3565,7 +3575,8 @@
       isHistory: false,
       isLive: isLive,
       leftExtContents: leftExtContents,
-      leftMidExtContents: leftMidExtContents
+      leftMidExtContents: leftMidExtContents,
+      hideBar: hideBar
     }), !isLive && /*#__PURE__*/React__default['default'].createElement(TineLine$1, {
       api: playerObj.api,
       event: playerObj.event

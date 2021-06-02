@@ -5,10 +5,10 @@ import Bar from './bar'
 import EventName from '../event/eventName'
 import PropTypes from 'prop-types'
 
-function LeftBar({ api, event, video, isHistory, reloadHistory, isLive, leftExtContents, leftMidExtContents }) {
-  const [openSliderVolume, setOpenSliderVolume] = useState(false)
+function LeftBar({ api, event, video, isHistory, reloadHistory, isLive, leftExtContents, leftMidExtContents, hideBar, setHideBar }) {
+  const [openSliderVolume, setOpenSliderVolume] = useState(hideBar)
   const [dep, setDep] = useState(Date.now())
-  const elRef = useRef(null)
+  const elRef = useRef()
   useEffect(() => {
     const updateRender = () => {
       setDep(Date.now())
@@ -52,15 +52,8 @@ function LeftBar({ api, event, video, isHistory, reloadHistory, isLive, leftExtC
   }, [event, isHistory, api])
 
   useEffect(() => {
-    // 点击其他地方隐藏输入框
-    elRef.current.handleClickOutside = (e) =>{
-      if(!elRef.current?.contains(e.target)){
-        setOpenSliderVolume(false)
-      }
-     }
-    document.addEventListener('click', elRef.current.handleClickOutside);
-    return () => document.removeEventListener('click', elRef.current.handleClickOutside);
-  }, [])
+   setOpenSliderVolume(false)
+  }, [hideBar])
 
   return (
     <div className="contraller-left-bar" ref={elRef}>

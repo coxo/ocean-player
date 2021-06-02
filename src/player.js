@@ -142,6 +142,8 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
 
   const [install, setInstall] = useState(false);
 
+  const [hideBar, setHideBar] = useState(false);
+
   // 开流状态 0 失败/未开流  1 开流成功
   const [streamState, setStreamState] = useState(0);
 
@@ -270,8 +272,17 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
     props.onStreamMounted && props.onStreamMounted({streamState})
   }, [streamState]);
 
+  /**
+   * 创建播放器事件器
+   * @param {*} player 
+   * @returns 
+   */
+  const mosLeaveHandler=(e = {})=>{
+      setHideBar(Math.round(Math.random()*100))
+  }
+
   return (
-    <div className={`lm-player-container ${className}`} ref={playContainerRef}>
+    <div className={`lm-player-container ${className}`} ref={playContainerRef} onMouseLeave={mosLeaveHandler}>
       <div className="player-mask-layout">
         <video autoPlay={autoPlay} preload={preload} muted={muted} poster={poster} controls={false} crossorigin={"Anonymous"} usecors={true} playsInline={playsinline} loop={loop} style={colorPicker} />
       </div>
@@ -288,6 +299,7 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
         colorPicker={(value) => {
           setColorPicker(value)
         }}
+        hideBar={hideBar}
         setStreamState={setStreamState}
         snapshot={props.snapshot}
         leftExtContents={props.leftExtContents}
@@ -321,7 +333,8 @@ function VideoTools({
   setStreamState,
   errorNoticeHandle,
   connectStatus,
-  reconnectHandle
+  reconnectHandle,
+  hideBar,
 }) {
   if (!playerObj) {
     return <NoSource install={install}/>;
@@ -348,6 +361,7 @@ function VideoTools({
             isLive={isLive}
             leftExtContents={leftExtContents}
             leftMidExtContents={leftMidExtContents}
+            hideBar={hideBar}
           />
           {!isLive && <TimeLine api={playerObj.api} event={playerObj.event} />}
         </ContrallerEvent>

@@ -7,7 +7,7 @@ import PropTypes from 'prop-types'
 import ColorPicker from './colorPicker'
 import ResolutionPicker from './resolutionPicker'
  
-function RightBar({ playContainer, api, scale, snapshot, rightExtContents, rightMidExtContents, isLive, switchResolution, colorPicker}) {
+function RightBar({ playContainer, api, scale, snapshot, rightExtContents, rightMidExtContents, isLive, switchResolution, colorPicker, hideBar}) {
   const [dep, setDep] = useState(Date.now())
 
   // 分辨率-默认显示
@@ -71,9 +71,9 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
           </Bar>
         </>
       )}
-      {isPalette && (<ColorPicker colorfilter={colorPicker}></ColorPicker>)}
+      {isPalette && (<ColorPicker colorfilter={colorPicker} hideBar={hideBar} />)}
       {isLive && isSwithRate && (
-        <ResolutionPicker name={viewText} switchResolution={switchResolution} api={api}/>
+        <ResolutionPicker name={viewText} switchResolution={switchResolution} api={api} hideBar={hideBar} />
       )}
       
       {snapshot && (

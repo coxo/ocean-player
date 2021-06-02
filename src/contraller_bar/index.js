@@ -22,6 +22,7 @@ function ContrallerBar({
   leftExtContents,
   leftMidExtContents,
   colorPicker,
+  hideBar,
 }) {
   return (
     <>
@@ -35,6 +36,7 @@ function ContrallerBar({
           isLive={isLive}
           leftMidExtContents={leftMidExtContents}
           leftExtContents={leftExtContents}
+          hideBar={hideBar}
         />
         <RightBar
           api={api}
@@ -46,6 +48,7 @@ function ContrallerBar({
           switchResolution={switchResolution}
           rightExtContents={rightExtContents}
           rightMidExtContents={rightMidExtContents}
+          hideBar={hideBar}
         />
       </div>
       <div className={`contraller-scale-layout ${!visibel ? 'hide-contraller-bar' : ''}`}>
