@@ -92,8 +92,12 @@ export function createFlvPlayer(video, options) {
  * 获取播放文件类型
  * @param {*} url
  */
-export function getVideoType(url) {
-  return url.indexOf('.flv') > -1 ? 'flv' : url.indexOf('.m3u8') > -1 ? 'm3u8' : 'native'
+ export function getVideoType(url) {
+  let type = url.indexOf('.flv') > -1 ? 'flv' : url.indexOf('.m3u8') > -1 ? 'm3u8' : 'native'
+  if(url.indexOf('protocol=flv')>-1){
+    type = 'flv'
+  }
+  return type
 }
 
 /**
@@ -368,7 +372,7 @@ export function detectorPlayeMode(){
  */
 export function installState(callback){
   // 进行类型检测 是否插件模式
-  if (detectorPlayeMode() == 1) return;
+  if (detectorPlayeMode() == 0) return;
 
   if(sessionStorage.getItem('_TEMP_PLAY_CODE') == '10000') return;
   // 进行本地检测
@@ -407,12 +411,12 @@ export function decodeService(player, onToken){
 
   switch (playeMode) {
     case 1:
-      url = tansDecoding(player)
-      break;
-    case 2:
-      url = serverDecoding(player)+ '&token=' + key
+      url = tansDecoding(player)+ '&token=' + key
       // 免责工具使用
       onToken && onToken(key)
+      break;
+    case 2:
+      url = serverDecoding(player)
       break;
     default:
       url = browserDecoding(player)

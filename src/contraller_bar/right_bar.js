@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback,useRef } from 'react'
 import IconFont from '../iconfont'
 import Bar from './bar'
 import { isFullscreen, fullScreenListener, computedBound, findVideoAttribute, getScreenRate, getGlobalCache} from '../util'
-import {VIDEO_RESOLUTION, GL_CACHE} from '../constant'
+import { GL_CACHE } from '../constant'
 import PropTypes from 'prop-types'
 import ColorPicker from './colorPicker'
 import ResolutionPicker from './resolutionPicker'
@@ -28,6 +28,7 @@ function RightBar({ playContainer, api, scale, snapshot, rightExtContents, right
 
   const fullscreen = useCallback(() => {
     const isFullScreen = !isFullscreen(playContainer)
+    console.info(playContainer)
     
     if(isFullScreen){
       api.requestFullScreen()

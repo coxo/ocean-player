@@ -1804,7 +1804,7 @@
           setLiveType("flv")
           liveInputRef.current.value = URL.createObjectURL(e.target.files[0])
         }
-        localStorage.setItem('PY_PLUS','{"mode":1,"version":"v1.0.10","decryptionMode":"&decryption=1","reloadTimer":10,"switchRate":true,"patternAuth":false,"streamReal":true,"palette":true,"connectOnce":false}')
+        localStorage.setItem('PY_PLUS','{"mode":0,"version":"v1.0.10","decryptionMode":"&decryption=1","reloadTimer":10,"switchRate":true,"patternAuth":false,"streamReal":true,"palette":true,"connectOnce":false}')
 
         sessionStorage.setItem('_APP_PLAY_VERSION','v1.0.10')
         function onVideoFn(obj){
@@ -1880,7 +1880,7 @@
 
                 setPlayObj(null)
                 setPlayerKey(true)
-                setFile('https://7262b25a-server.zhihuiyunyan.cn/flv_live?app=live&token=539953132_0_1622257012_6b92144721a0da978f6c04dec3120441&')
+                setFile('http://localhost:10223/staticResource/cloudeye/v2/devices/539953132/localrecord/control?begin=1623138120&client_token=539953132_65280_1624351443_2a8597b1227fd5dbfa500b47c94a96dc&end=1623141842&protocol=')
                 //  setLiveNum(sNumInputRef.current.value)
                 }}>
                   播放

@@ -76,7 +76,7 @@ export const ErrorContainer = ({reconnectHandle}) => {
     return (
       <>
         <div className="lm-player-message-mask lm-player-mask-loading-animation">
-          <IconFont style={{ fontSize: 68, color: '#DBE1EA' }} type={'lm-player-M_Device_jiazaishibai'}/>
+          <IconFont style={{ fontSize: 68, color: '#DBE1EA' }} type={'lm-player-YesorNo_No_Dark'}/>
            <span className="lm-player-message">连接失败<span className="refresh-action" onClick={()=> reconnectHandle()}>刷新重试</span></span>
          </div>
       </>

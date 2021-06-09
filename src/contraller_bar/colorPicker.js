@@ -3,7 +3,7 @@ import IconFont from '../iconfont'
 import Bar from './bar'
 import { Slider } from 'antd'
 
-function ColorPicker({ playContainer, api, colorfilter, hideBar }) {
+function ColorPicker({ colorfilter, hideBar }) {
   const [brightnessValue, setBrightnessValue] = useState(127)
   const [contrastValue, setContrastValue] = useState(127)
   const [saturateValue, setSaturateValue] = useState(127)
@@ -64,9 +64,9 @@ function ColorPicker({ playContainer, api, colorfilter, hideBar }) {
   }
 
   const handleResetChange = data => {
-    setBrightnessValue(50)
-    setContrastValue(50)
-    setSaturateValue(50)
+    setBrightnessValue(127)
+    setContrastValue(127)
+    setSaturateValue(127)
     setHueValue(0)
     colorfilter({})
   }
@@ -76,14 +76,6 @@ function ColorPicker({ playContainer, api, colorfilter, hideBar }) {
   }
 
   useEffect(() => {
-    // 点击其他地方隐藏输入框
-    // elRef.current.handleClickOutside = (e) =>{
-    //   if(!elRef.current?.contains(e.target)){
-    //    setIsPicker(false)
-    //   }
-    //  }
-    // document.addEventListener('click', elRef.current.handleClickOutside);
-    // return () => document.removeEventListener('click', elRef.current.handleClickOutside);
     setIsPicker(false)
   }, [hideBar])
 

@@ -1041,7 +1041,13 @@ function createFlvPlayer(video, options) {
  */
 
 function getVideoType(url) {
-  return url.indexOf('.flv') > -1 ? 'flv' : url.indexOf('.m3u8') > -1 ? 'm3u8' : 'native';
+  let type = url.indexOf('.flv') > -1 ? 'flv' : url.indexOf('.m3u8') > -1 ? 'm3u8' : 'native';
+
+  if (url.indexOf('protocol=flv') > -1) {
+    type = 'flv';
+  }
+
+  return type;
 }
 /**
  * 播放时间转字符串
@@ -1316,7 +1322,7 @@ function detectorPlayeMode() {
 
 function installState(callback) {
   // 进行类型检测 是否插件模式
-  if (detectorPlayeMode() == 1) return;
+  if (detectorPlayeMode() == 0) return;
   if (sessionStorage.getItem('_TEMP_PLAY_CODE') == '10000') return; // 进行本地检测
 
   const port = getLocalPort();
@@ -1357,13 +1363,13 @@ function decodeService(player, onToken) {
 
   switch (playeMode) {
     case 1:
-      url = tansDecoding(player);
+      url = tansDecoding(player) + '&token=' + key; // 免责工具使用
+
+      onToken && onToken(key);
       break;
 
     case 2:
-      url = serverDecoding(player) + '&token=' + key; // 免责工具使用
-
-      onToken && onToken(key);
+      url = serverDecoding(player);
       break;
 
     default:
@@ -1844,8 +1850,6 @@ LeftBar.propTypes = {
 };
 
 function ColorPicker({
-  playContainer,
-  api,
   colorfilter,
   hideBar
 }) {
@@ -1903,9 +1907,9 @@ function ColorPicker({
   };
 
   const handleResetChange = data => {
-    setBrightnessValue(50);
-    setContrastValue(50);
-    setSaturateValue(50);
+    setBrightnessValue(127);
+    setContrastValue(127);
+    setSaturateValue(127);
     setHueValue(0);
     colorfilter({});
   };
@@ -1915,14 +1919,6 @@ function ColorPicker({
   };
 
   useEffect(() => {
-    // 点击其他地方隐藏输入框
-    // elRef.current.handleClickOutside = (e) =>{
-    //   if(!elRef.current?.contains(e.target)){
-    //    setIsPicker(false)
-    //   }
-    //  }
-    // document.addEventListener('click', elRef.current.handleClickOutside);
-    // return () => document.removeEventListener('click', elRef.current.handleClickOutside);
     setIsPicker(false);
   }, [hideBar]);
   return /*#__PURE__*/React.createElement(Bar, {
@@ -2050,6 +2046,7 @@ function RightBar({
   const isfull = useMemo(() => isFullscreen(playContainer), [dep, playContainer]);
   const fullscreen = useCallback(() => {
     const isFullScreen = !isFullscreen(playContainer);
+    console.info(playContainer);
 
     if (isFullScreen) {
       api.requestFullScreen();
@@ -2357,7 +2354,7 @@ const ErrorContainer = ({
       fontSize: 68,
       color: '#DBE1EA'
     },
-    type: 'lm-player-M_Device_jiazaishibai'
+    type: 'lm-player-YesorNo_No_Dark'
   }), /*#__PURE__*/React.createElement("span", {
     className: "lm-player-message"
   }, "\u8FDE\u63A5\u5931\u8D25", /*#__PURE__*/React.createElement("span", {
