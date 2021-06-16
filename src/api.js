@@ -96,6 +96,21 @@ export default class Api {
       }
     }
   }
+  /**
+   * 设置currentTime实现seek--前端录像-扩展
+   * @param {*} seconds
+   * @param {*} noEmit
+   */
+   seekHsTo(seconds, noEmit) {
+    console.log(this.player)
+    if (this.player) {
+      console.log(this.player.currentTime)
+      this.player.currentTime = seconds
+      if (!noEmit) {
+        this.event.emit(EventName.SEEK, seconds)
+      }
+    }
+  }
   success(notEmit){
     !notEmit && this.event?.emit(EventName.RELOAD)
   }
@@ -322,6 +337,7 @@ export default class Api {
       success: this.success.bind(this),
       pause: this.pause.bind(this),
       seekTo: this.seekTo.bind(this),
+      seekHsTo: this.seekHsTo.bind(this),
       setVolume: this.setVolume.bind(this),
       mute: this.mute.bind(this),
       unmute: this.unmute.bind(this),

@@ -139,7 +139,7 @@ function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, mu
     playerRef.current = playerObject;
     setPlayerObj(playerObject);
     if (defaultSeekTime) {
-      playerObject.api.seekTo(defaultSeekTime);
+      playerObject.api.seekHsTo(defaultSeekTime);
     }
     if (onInitPlayer) {
       onInitPlayer(Object.assign({}, playerObject.api.getApi(), playerObject.event.getApi(), { seekTo, changePlayIndex, reload: reloadHistory }));
