@@ -19,5 +19,5 @@ export const computedTimeAndIndex = (historyList, currentTime) => {
   } catch (e) {
     console.error('historyList data error', historyList)
   }
-  return [index, seekTime]
+  return [index, seekTime < 0 ? 0 : seekTime]
 }

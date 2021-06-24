@@ -85,7 +85,6 @@ export const ErrorContainer = ({reconnectHandle}) => {
 
 export const NoSource = ({ install }) => {
   const _TEMP_PLAY_CODE = sessionStorage.getItem('_TEMP_PLAY_CODE')
-  // const _TEMP_PLAY_PATH = sessionStorage.getItem('_TEMP_PLAY_PATH')
   const _APP_PLAY_VERSION  = sessionStorage.getItem('_APP_PLAY_VERSION')
   const _TEMP_PLAY_PATH = window.BSConfig?.playerDownloadUrl || localStorage.getItem('ZVPlayerUrl')
   return (

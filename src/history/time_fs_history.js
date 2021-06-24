@@ -19,7 +19,6 @@ const computedLineList = (historyList) => {
 
 function TineLine({ event, api, visibel, historyList, playIndex, seekTo, defaultTime }) {
   const [state, setState] = useState({ duration: 1, currentTime: defaultTime, buffered: 0, isEnd: false })
-
   useEffect(() => setState((old) => ({ ...old, currentTime: defaultTime })), [defaultTime])
 
   useEffect(() => {
@@ -55,8 +54,8 @@ function TineLine({ event, api, visibel, historyList, playIndex, seekTo, default
     (percent) => {
       const currentTime = percent * historyList.duration //修正一下误差
       const [index, time] = computedTimeAndIndex(historyList, currentTime)
-      seekTo(currentTime, index)
-      setState((old) => ({ ...old, currentTime: time, isEnd: false }))
+      seekTo(currentTime, index, historyList.beginDate + currentTime*1000)
+      setState((old) => ({ ...old, isEnd: false }))
     },
     [historyList]
   )
@@ -73,7 +72,6 @@ function TineLine({ event, api, visibel, historyList, playIndex, seekTo, default
   const currentIndexTime = useMemo(() => (currentLine.length === 0 ? 0 : currentLine.length > 1 ? currentLine.reduce((p, c) => p + c) : currentLine[0]), [currentLine])
   const playPercent = useMemo(() => (currentTime / historyList.duration) * 100 + currentIndexTime, [currentIndexTime, historyList, currentTime])
   const bufferedPercent = useMemo(() => (buffered / historyList.duration) * 100 + currentIndexTime, [historyList, currentIndexTime, buffered])
-
   return (
     <div className={`video-time-line-layout ${!visibel ? 'hide-time-line' : ''}`}>
       <IconFont type="lm-player-PrevFast" onClick={() => api.backWind()} className="time-line-action-item" />

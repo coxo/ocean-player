@@ -22,13 +22,6 @@ function ResolutionPicker({ switchResolution, api, name, hideBar }) {
 
   useEffect(() => {
         // 点击其他地方隐藏输入框
-        // const handleClickOutside = (e) =>{
-        //   if(!resolutionRef.current?.contains(e.target)){
-        //     setIsResolution(false)
-        //   }
-        //  }
-        // document.querySelector(":root").addEventListener('click', handleClickOutside)
-        // return () => document.querySelector(":root").removeEventListener('click', handleClickOutside);
         setIsResolution(false)
   }, [hideBar])
 

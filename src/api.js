@@ -87,30 +87,31 @@ export default class Api {
       this.flv.unload()
       this.flv.load()
     }
-    console.log(this.player)
+    // console.log(this.player)
     if (this.player) {
-      console.log(this.player.currentTime)
+      // console.log(this.player.currentTime)
       this.player.currentTime = seconds
       if (!noEmit) {
         this.event.emit(EventName.SEEK, seconds)
       }
     }
   }
-  /**
-   * 设置currentTime实现seek--前端录像-扩展
+
+    /**
+   * 设置currentTime实现seek
    * @param {*} seconds
    * @param {*} noEmit
    */
-   seekHsTo(seconds, noEmit) {
-    console.log(this.player)
-    if (this.player) {
-      console.log(this.player.currentTime)
-      this.player.currentTime = seconds
-      if (!noEmit) {
-        this.event.emit(EventName.SEEK, seconds)
+    seekHsTo(seconds, noEmit) {
+      console.log(this.player)
+      if (this.player) {
+        console.log(this.player.currentTime)
+        this.player.currentTime = seconds
+        if (!noEmit) {
+          this.event.emit(EventName.SEEK, seconds)
+        }
       }
     }
-  }
   success(notEmit){
     !notEmit && this.event?.emit(EventName.RELOAD)
   }

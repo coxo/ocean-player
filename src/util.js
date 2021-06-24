@@ -94,9 +94,7 @@ export function createFlvPlayer(video, options) {
  */
  export function getVideoType(url) {
   let type = url.indexOf('.flv') > -1 ? 'flv' : url.indexOf('.m3u8') > -1 ? 'm3u8' : 'native'
-  if(url.indexOf('protocol=flv')>-1){
-    type = 'flv'
-  }
+  if( url.indexOf('protocol=flv')>-1 ) type = 'flv'
   return type
 }
 
@@ -367,6 +365,60 @@ export function detectorPlayeMode(){
   // 是否本地插件播放 0是互联网模式，不走插件
   return isPlus
 }
+
+export function compare(a, b) {
+  if (a === b) {
+     return 0;
+  }
+
+  var a_components = a.split(".");
+  var b_components = b.split(".");
+
+  var len = Math.min(a_components.length, b_components.length);
+
+  // loop while the components are equal
+  for (var i = 0; i < len; i++) {
+      // A bigger than B
+      if (parseInt(a_components[i]) > parseInt(b_components[i])) {
+          return 1;
+      }
+
+      // B bigger than A
+      if (parseInt(a_components[i]) < parseInt(b_components[i])) {
+          return -1;
+      }
+  }
+
+  // If one's a prefix of the other, the longer one is greater.
+  if (a_components.length > b_components.length) {
+      return 1;
+  }
+
+  if (a_components.length < b_components.length) {
+      return -1;
+  }
+
+  // Otherwise they are the same.
+  return 0;
+}
+
+/**
+ * 版本验证处理
+ * @returns 
+ */
+ export function checkVerson(sysVersion,currentVersion){
+   console.info(sysVersion);
+   if(!currentVersion){
+     console.warn('检测到应用系统版版本配置未生效，请检查配置！')
+    return false
+   }
+
+   if(compare(currentVersion.substr(1), sysVersion.substr(1)) < 0){
+     // 安装版本过低，需要升级
+     return false
+   }
+  return true
+}
 /**
  * 解析本地是否安装
  */
@@ -383,9 +435,9 @@ export function installState(callback){
       res = JSON.parse(respondData)
       if(res.code == 200){
         sessionStorage.setItem('_TEMP_PLAY_VERSION', res.version)
-        if(getAppPlayerVersion() != res.version){
+        if(!checkVerson(getAppPlayerVersion(),res.version)){
           sessionStorage.setItem('_TEMP_PLAY_CODE','10001')
-          throw `检测到版本${res.version}与应用系统版本不匹配，请检查`
+          throw `检测到版本${res.version}与应用系统版本不匹配，请检查配置`
         }else{
           sessionStorage.setItem('_TEMP_PLAY_CODE','10000')
         }
