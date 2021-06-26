@@ -53,7 +53,8 @@ function FPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
       if (playerRef.current.event && playerRef.current.api) {
         seekFrontRangeData && seekFrontRangeData(`${dateTime}`.substr(0,10),function(msg){
           if(msg == 'error'){
-            changePlayIndex(playIndex + 1);
+            //seek异常时， 根据当前seektime获取当前对应的索引
+            changePlayIndex(pIndex);
           }else{
             setSeekTime(currentTime)
           }
