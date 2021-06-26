@@ -34,7 +34,14 @@ function LeftBar({ api, event, video, isHistory, reloadHistory, isLive, leftExtC
   const sliderClassName = useMemo(() => (openSliderVolume ? 'contraller-bar-hover-volume' : ''), [openSliderVolume])
 
   //TODO 方法
-  const changePlayStatus = useCallback(() => (video.paused ? api.play() : api.pause()), [video, api])
+  const changePlayStatus = useCallback(() => {
+    // 录像播放，结束后，点击开始停止，重新开始
+    if(isHistory && video.ended){
+      reloadHistory()
+    }else{
+      video.paused ? api.play() : api.pause()
+    }
+  }, [video, api])
 
   const mutedChantgeStatus = useCallback(() => (video.muted ? api.unmute() : api.mute()), [api, video])
 
