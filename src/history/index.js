@@ -6,11 +6,14 @@ import { getVideoType} from '../util';
 
 function HistoryPlayer({ type, historyList, defaultTime, className, autoPlay, muted, poster, playsinline, loop, preload, children, onInitPlayer, screenNum, speed, seekFrontRangeData, ...props }) {
   const formartType = useMemo(() => {
-    const url = historyList.fragments.find((item)=> {
+    try {
+      const fragment = historyList.fragments.find((item)=> {
         if(item.file) return item
-    })
-
-    return getVideoType(url.file);
+      })
+      return getVideoType(fragment.file);
+    } catch (error) {
+      return ''
+    }
   }, [historyList]);
 
   const Player = formartType === 'flv'? FPlayer: HPlayer

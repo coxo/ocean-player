@@ -10,7 +10,7 @@ import VideoEvent from '../event';
 import PlayEnd from './play_end';
 import EventName from '../event/eventName';
 import ContrallerEvent from '../event/contrallerEvent';
-import { getVideoType, createHlsPlayer, getScreenRate } from '../util';
+import { getVideoType, createHlsPlayer, decodeService, getScreenRate } from '../util';
 import { computedTimeAndIndex } from './utils';
 
 
@@ -64,16 +64,20 @@ function HPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
 
   const changePlayIndex = useCallback(
     (index) => {
-      if (index > historyList.fragments.length - 1) {
-        return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
-      }
-
-      if (!historyList.fragments[index].file) {
-        return changePlayIndex(index + 1);
-      }
-
-      if (playerRef.current && playerRef.current.event) {
-        playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
+      try {
+        if (index > historyList.fragments.length - 1) {
+          return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
+        }
+  
+        if (!historyList.fragments[index].file) {
+          return changePlayIndex(index + 1);
+        }
+  
+        if (playerRef.current && playerRef.current.event) {
+          playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
+        }
+      } catch (error) {
+        // console.error('historyList data error', historyList)
       }
       setPlayStatus([index, 0]);
     },
@@ -124,6 +128,10 @@ function HPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
     };
     let isInit = false;
     const formartType = getVideoType(file);
+    if (formartType === 'flv' || type === 'flv') {
+      isInit = true;
+      playerObject.flv = createFlvPlayer(playerObject.video, { ...props,  file: decodeService({file, resolution}) });
+    }
     if (formartType === 'm3u8' || type === 'hls') {
       isInit = true;
       playerObject.hls = createHlsPlayer(playerObject.video, file);

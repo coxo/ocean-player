@@ -998,7 +998,7 @@ function createHlsPlayer(video, file) {
  * @param {*} options
  */
 
-function createFlvPlayer(video, options) {
+function createFlvPlayer$1(video, options) {
   const {
     flvOptions = {},
     flvConfig = {}
@@ -1845,7 +1845,14 @@ function LeftBar({
   const volumePercent = useMemo(() => volumeVal === 0 ? 0 : volumeVal * 100, [volumeVal]);
   const sliderClassName = useMemo(() => openSliderVolume ? 'contraller-bar-hover-volume' : '', [openSliderVolume]); //TODO 方法
 
-  const changePlayStatus = useCallback(() => video.paused ? api.play() : api.pause(), [video, api]);
+  const changePlayStatus = useCallback(() => {
+    // 录像播放，结束后，点击开始停止，重新开始
+    if (isHistory && video.ended) {
+      reloadHistory();
+    } else {
+      video.paused ? api.play() : api.pause();
+    }
+  }, [video, api]);
   const mutedChantgeStatus = useCallback(() => video.muted ? api.unmute() : api.mute(), [api, video]);
   const onChangeVolume = useCallback(volume => {
     api.setVolume(parseFloat(volume.toFixed(1)));
@@ -3437,7 +3444,7 @@ function ZPlayer({
       isInit = true;
 
       try {
-        player.flv = createFlvPlayer(player.video, { ...props,
+        player.flv = createFlvPlayer$1(player.video, { ...props,
           file: decodeService({
             file,
             resolution,
@@ -4187,16 +4194,19 @@ function HPlayer({
     }
   }, [playIndex, historyList]);
   const changePlayIndex = useCallback(index => {
-    if (index > historyList.fragments.length - 1) {
-      return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
-    }
+    try {
+      if (index > historyList.fragments.length - 1) {
+        return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
+      }
 
-    if (!historyList.fragments[index].file) {
-      return changePlayIndex(index + 1);
-    }
+      if (!historyList.fragments[index].file) {
+        return changePlayIndex(index + 1);
+      }
 
-    if (playerRef.current && playerRef.current.event) {
-      playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
+      if (playerRef.current && playerRef.current.event) {
+        playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
+      }
+    } catch (error) {// console.error('historyList data error', historyList)
     }
 
     setPlayStatus([index, 0]);
@@ -4242,6 +4252,16 @@ function HPlayer({
     };
     let isInit = false;
     const formartType = getVideoType(file);
+
+    if (formartType === 'flv' || type === 'flv') {
+      isInit = true;
+      playerObject.flv = createFlvPlayer(playerObject.video, { ...props,
+        file: decodeService({
+          file,
+          resolution
+        })
+      });
+    }
 
     if (formartType === 'm3u8' || type === 'hls') {
       isInit = true;
@@ -4648,16 +4668,19 @@ function FPlayer({
    */
 
   const changePlayIndex = useCallback(index => {
-    if (index > historyList.fragments.length - 1) {
-      return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
-    }
+    try {
+      if (index > historyList.fragments.length - 1) {
+        return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
+      }
 
-    if (!historyList.fragments[index].file) {
-      return changePlayIndex(index + 1);
-    }
+      if (!historyList.fragments[index].file) {
+        return changePlayIndex(index + 1);
+      }
 
-    if (playerRef.current && playerRef.current.event) {
-      playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
+      if (playerRef.current && playerRef.current.event) {
+        playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
+      }
+    } catch (error) {// console.error('historyList data error', historyList)
     }
 
     setPlayIndex(index);
@@ -4705,7 +4728,7 @@ function FPlayer({
     const formartType = getVideoType(file);
 
     if (formartType === 'flv' || type === 'flv') {
-      playerObject.flv = createFlvPlayer(playerObject.video, { ...props,
+      playerObject.flv = createFlvPlayer$1(playerObject.video, { ...props,
         file: decodeService({
           file,
           resolution
@@ -4921,10 +4944,14 @@ function HistoryPlayer({
   ...props
 }) {
   const formartType = useMemo(() => {
-    const url = historyList.fragments.find(item => {
-      if (item.file) return item;
-    });
-    return getVideoType(url.file);
+    try {
+      const fragment = historyList.fragments.find(item => {
+        if (item.file) return item;
+      });
+      return getVideoType(fragment.file);
+    } catch (error) {
+      return '';
+    }
   }, [historyList]);
   const Player = formartType === 'flv' ? FPlayer : HPlayer;
   return /*#__PURE__*/React.createElement(Player, _extends({

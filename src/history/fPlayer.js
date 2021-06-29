@@ -70,16 +70,18 @@ function FPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
    */
   const changePlayIndex = useCallback(
     (index) => {
-      if (index > historyList.fragments.length - 1) {
-        return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
-      }
-
-      if (!historyList.fragments[index].file) {
-        return changePlayIndex(index + 1);
-      }
-
-      if (playerRef.current && playerRef.current.event) {
-        playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
+      try {
+        if (index > historyList.fragments.length - 1) {
+          return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
+        }
+        if (!historyList.fragments[index].file) {
+          return changePlayIndex(index + 1);
+        }
+        if (playerRef.current && playerRef.current.event) {
+          playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
+        }
+      } catch (error) {
+        // console.error('historyList data error', historyList)
       }
       setPlayIndex(index)
     },
