@@ -76,10 +76,10 @@ function HPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
         if (playerRef.current && playerRef.current.event) {
           playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
         }
+        setPlayStatus([index, 0]);
       } catch (error) {
         // console.error('historyList data error', historyList)
       }
-      setPlayStatus([index, 0]);
     },
     [historyList]
   );

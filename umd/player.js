@@ -975,7 +975,7 @@
       name: '标清',
       resolution: '480p',
       bitrate: '1M',
-      templateCode: 1710011,
+      templateCode: 171002,
       show: false
     },
     '5': {
@@ -1024,7 +1024,7 @@
    * @param {*} options
    */
 
-  function createFlvPlayer(video, options) {
+  function createFlvPlayer$1(video, options) {
     const {
       flvOptions = {},
       flvConfig = {}
@@ -1068,11 +1068,7 @@
 
   function getVideoType(url) {
     let type = url.indexOf('.flv') > -1 ? 'flv' : url.indexOf('.m3u8') > -1 ? 'm3u8' : 'native';
-
-    if (url.indexOf('protocol=flv') > -1) {
-      type = 'flv';
-    }
-
+    if (url.indexOf('protocol=flv') > -1) type = 'flv';
     return type;
   }
   /**
@@ -1342,6 +1338,59 @@
 
     return isPlus;
   }
+  function compare(a, b) {
+    if (a === b) {
+      return 0;
+    }
+
+    var a_components = a.split(".");
+    var b_components = b.split(".");
+    var len = Math.min(a_components.length, b_components.length); // loop while the components are equal
+
+    for (var i = 0; i < len; i++) {
+      // A bigger than B
+      if (parseInt(a_components[i]) > parseInt(b_components[i])) {
+        return 1;
+      } // B bigger than A
+
+
+      if (parseInt(a_components[i]) < parseInt(b_components[i])) {
+        return -1;
+      }
+    } // If one's a prefix of the other, the longer one is greater.
+
+
+    if (a_components.length > b_components.length) {
+      return 1;
+    }
+
+    if (a_components.length < b_components.length) {
+      return -1;
+    } // Otherwise they are the same.
+
+
+    return 0;
+  }
+  /**
+   * 版本验证处理
+   * @returns 
+   */
+
+  function checkVerson(sysVersion, currentVersion) {
+    console.info(sysVersion);
+
+    if (!currentVersion) {
+      console.warn('检测到应用系统版版本配置未生效，请检查配置！');
+      return false;
+    }
+
+    if (compare(currentVersion.substr(1), sysVersion.substr(1)) < 0) {
+      // 安装版本过低，需要升级
+      return false;
+    }
+
+    return true;
+  }
   /**
    * 解析本地是否安装
    */
@@ -1361,9 +1410,9 @@
         if (res.code == 200) {
           sessionStorage.setItem('_TEMP_PLAY_VERSION', res.version);
 
-          if (getAppPlayerVersion() != res.version) {
+          if (!checkVerson(getAppPlayerVersion(), res.version)) {
             sessionStorage.setItem('_TEMP_PLAY_CODE', '10001');
-            throw `检测到版本${res.version}与应用系统版本不匹配，请检查`;
+            throw `检测到版本${res.version}与应用系统版本不匹配，请检查配置`;
           } else {
             sessionStorage.setItem('_TEMP_PLAY_CODE', '10000');
           }
@@ -1822,7 +1871,14 @@
     const volumePercent = React.useMemo(() => volumeVal === 0 ? 0 : volumeVal * 100, [volumeVal]);
     const sliderClassName = React.useMemo(() => openSliderVolume ? 'contraller-bar-hover-volume' : '', [openSliderVolume]); //TODO 方法
 
-    const changePlayStatus = React.useCallback(() => video.paused ? api.play() : api.pause(), [video, api]);
+    const changePlayStatus = React.useCallback(() => {
+      // 录像播放，结束后，点击开始停止，重新开始
+      if (isHistory && video.ended) {
+        reloadHistory();
+      } else {
+        video.paused ? api.play() : api.pause();
+      }
+    }, [video, api]);
     const mutedChantgeStatus = React.useCallback(() => video.muted ? api.unmute() : api.mute(), [api, video]);
     const onChangeVolume = React.useCallback(volume => {
       api.setVolume(parseFloat(volume.toFixed(1)));
@@ -2017,13 +2073,6 @@
     }, [api]);
     React.useEffect(() => {
       // 点击其他地方隐藏输入框
-      // const handleClickOutside = (e) =>{
-      //   if(!resolutionRef.current?.contains(e.target)){
-      //     setIsResolution(false)
-      //   }
-      //  }
-      // document.querySelector(":root").addEventListener('click', handleClickOutside)
-      // return () => document.querySelector(":root").removeEventListener('click', handleClickOutside);
       setIsResolution(false);
     }, [hideBar]);
     React.useEffect(() => {
@@ -2393,8 +2442,7 @@
   }) => {
     var _window$BSConfig;
 
-    const _TEMP_PLAY_CODE = sessionStorage.getItem('_TEMP_PLAY_CODE'); // const _TEMP_PLAY_PATH = sessionStorage.getItem('_TEMP_PLAY_PATH')
-
+    const _TEMP_PLAY_CODE = sessionStorage.getItem('_TEMP_PLAY_CODE');
 
     const _APP_PLAY_VERSION = sessionStorage.getItem('_APP_PLAY_VERSION');
 
@@ -2435,7 +2483,7 @@
     }, _APP_PLAY_VERSION)));
   };
 
-  function TineLine$1({
+  function TineLine$2({
     event,
     api,
     visibel
@@ -2785,8 +2833,26 @@
       if (this.flv && buffered[0] > seconds) {
         this.flv.unload();
         this.flv.load();
-      }
+      } // console.log(this.player)
 
+
+      if (this.player) {
+        // console.log(this.player.currentTime)
+        this.player.currentTime = seconds;
+
+        if (!noEmit) {
+          this.event.emit(EventName.SEEK, seconds);
+        }
+      }
+    }
+    /**
+    * 设置currentTime实现seek
+    * @param {*} seconds
+    * @param {*} noEmit
+    */
+
+
+    seekHsTo(seconds, noEmit) {
       console.log(this.player);
 
       if (this.player) {
@@ -3076,6 +3142,7 @@
         success: this.success.bind(this),
         pause: this.pause.bind(this),
         seekTo: this.seekTo.bind(this),
+        seekHsTo: this.seekHsTo.bind(this),
         setVolume: this.setVolume.bind(this),
         mute: this.mute.bind(this),
         unmute: this.unmute.bind(this),
@@ -3403,7 +3470,7 @@
         isInit = true;
 
         try {
-          player.flv = createFlvPlayer(player.video, { ...props,
+          player.flv = createFlvPlayer$1(player.video, { ...props,
             file: decodeService({
               file,
               resolution,
@@ -3574,7 +3641,7 @@
       leftExtContents: leftExtContents,
       leftMidExtContents: leftMidExtContents,
       hideBar: hideBar
-    }), !isLive && /*#__PURE__*/React__default['default'].createElement(TineLine$1, {
+    }), !isLive && /*#__PURE__*/React__default['default'].createElement(TineLine$2, {
       api: playerObj.api,
       event: playerObj.event
     })), /*#__PURE__*/React__default['default'].createElement(ErrorEvent$1, {
@@ -3816,10 +3883,10 @@
       console.error('historyList data error', historyList);
     }
 
-    return [index, seekTime];
+    return [index, seekTime < 0 ? 0 : seekTime];
   };
 
-  const computedLineList = historyList => {
+  const computedLineList$1 = historyList => {
     const duration = historyList.duration;
     return historyList.fragments.map(v => {
       return {
@@ -3829,7 +3896,7 @@
     });
   };
 
-  function TineLine({
+  function TineLine$1({
     event,
     api,
     visibel,
@@ -3895,7 +3962,6 @@
       const currentTime = percent * historyList.duration; //修正一下误差
 
       const [index, time] = computedTimeAndIndex(historyList, currentTime);
-      console.log(index, time);
       seekTo(currentTime, index);
       setState(old => ({ ...old,
         currentTime: time,
@@ -3914,7 +3980,7 @@
       buffered,
       isEnd
     } = state;
-    const lineList = React.useMemo(() => computedLineList(historyList), [historyList]);
+    const lineList = React.useMemo(() => computedLineList$1(historyList), [historyList]);
     const currentLine = React.useMemo(() => lineList.filter((_, i) => i < playIndex).map(v => v.size), [playIndex, lineList]);
     const currentIndexTime = React.useMemo(() => currentLine.length === 0 ? 0 : currentLine.length > 1 ? currentLine.reduce((p, c) => p + c) : currentLine[0], [currentLine]);
     const playPercent = React.useMemo(() => currentTime / historyList.duration * 100 + currentIndexTime, [currentIndexTime, historyList, currentTime]);
@@ -3950,7 +4016,7 @@
     }));
   }
 
-  TineLine.propTypes = {
+  TineLine$1.propTypes = {
     event: PropTypes__default['default'].object,
     api: PropTypes__default['default'].object,
     changePlayIndex: PropTypes__default['default'].func,
@@ -4091,7 +4157,13 @@
     playIndex: PropTypes__default['default'].number
   };
 
-  function HistoryPlayer({
+  /**
+   * 云录像播放 hls
+   * @param {*} param0 
+   * @returns 
+   */
+
+  function HPlayer({
     type,
     historyList,
     defaultTime,
@@ -4148,19 +4220,22 @@
       }
     }, [playIndex, historyList]);
     const changePlayIndex = React.useCallback(index => {
-      if (index > historyList.fragments.length - 1) {
-        return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
-      }
+      try {
+        if (index > historyList.fragments.length - 1) {
+          return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
+        }
 
-      if (!historyList.fragments[index].file) {
-        return changePlayIndex(index + 1);
-      }
+        if (!historyList.fragments[index].file) {
+          return changePlayIndex(index + 1);
+        }
 
-      if (playerRef.current && playerRef.current.event) {
-        playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
-      }
+        if (playerRef.current && playerRef.current.event) {
+          playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
+        }
 
-      setPlayStatus([index, 0]);
+        setPlayStatus([index, 0]);
+      } catch (error) {// console.error('historyList data error', historyList)
+      }
     }, [historyList]);
     const reloadHistory = React.useCallback(() => {
       if (playStatus[0] === 0) {
@@ -4189,6 +4264,8 @@
       playerRef.current = null;
     }, [file]);
     React.useEffect(() => {
+      console.info('云录像播放...');
+
       if (!file) {
         return;
       }
@@ -4340,6 +4417,472 @@
       leftExtContents: leftExtContents,
       leftMidExtContents: leftMidExtContents,
       reloadHistory: reloadHistory
+    }), /*#__PURE__*/React__default['default'].createElement(TineLine$1, {
+      defaultTime: defaultTime,
+      changePlayIndex: changePlayIndex,
+      historyList: historyList,
+      playIndex: playIndex,
+      seekTo: seekTo,
+      api: playerObj.api,
+      event: playerObj.event
+    })), /*#__PURE__*/React__default['default'].createElement(ErrorEvent, {
+      changePlayIndex: changePlayIndex,
+      playIndex: playIndex,
+      isHistory: true,
+      flv: playerObj.flv,
+      hls: playerObj.hls,
+      api: playerObj.api,
+      event: playerObj.event,
+      errorReloadTimer: errorReloadTimer
+    }), /*#__PURE__*/React__default['default'].createElement(PlayEnd, {
+      event: playerObj.event,
+      changePlayIndex: changePlayIndex,
+      playIndex: playIndex
+    }));
+  }
+
+  HPlayer.propTypes = {
+    historyList: PropTypes__default['default'].object.isRequired,
+    //播放地址 必填
+    errorReloadTimer: PropTypes__default['default'].number,
+    //视频错误重连次数
+    type: PropTypes__default['default'].oneOf(['flv', 'hls', 'native']),
+    //强制视频流类型
+    onInitPlayer: PropTypes__default['default'].func,
+    isDraggable: PropTypes__default['default'].bool,
+    isScale: PropTypes__default['default'].bool,
+    muted: PropTypes__default['default'].string,
+    autoPlay: PropTypes__default['default'].bool,
+    playsInline: PropTypes__default['default'].bool,
+    preload: PropTypes__default['default'].string,
+    poster: PropTypes__default['default'].string,
+    loop: PropTypes__default['default'].bool,
+    defaultTime: PropTypes__default['default'].number,
+    className: PropTypes__default['default'].string,
+    playsinline: PropTypes__default['default'].bool,
+    children: PropTypes__default['default'].any,
+    rightExtContents: PropTypes__default['default'].element,
+    rightMidExtContents: PropTypes__default['default'].element,
+    leftExtContents: PropTypes__default['default'].element,
+    leftMidExtContents: PropTypes__default['default'].element,
+    flvOptions: PropTypes__default['default'].object,
+    flvConfig: PropTypes__default['default'].object
+  };
+  HPlayer.defaultProps = {
+    draggable: true,
+    scale: true,
+    errorReloadTimer: 5,
+    muted: 'muted',
+    autoPlay: true,
+    playsInline: false,
+    preload: 'auto',
+    loop: false,
+    defaultTime: 0,
+    historyList: {
+      beginDate: 0,
+      duration: 0,
+      fragments: []
+    }
+  };
+
+  const computedLineList = historyList => {
+    const duration = historyList.duration;
+    return historyList.fragments.map(v => {
+      return {
+        disabled: !v.file,
+        size: (v.end - v.begin) / duration * 100
+      };
+    });
+  };
+
+  function TineLine({
+    event,
+    api,
+    visibel,
+    historyList,
+    playIndex,
+    seekTo,
+    defaultTime
+  }) {
+    const [state, setState] = React.useState({
+      duration: 1,
+      currentTime: defaultTime,
+      buffered: 0,
+      isEnd: false
+    });
+    React.useEffect(() => setState(old => ({ ...old,
+      currentTime: defaultTime
+    })), [defaultTime]);
+    React.useEffect(() => {
+      const getDuration = () => setState(old => ({ ...old,
+        duration: api.getDuration()
+      }));
+
+      const getCurrentTime = () => setState(old => ({ ...old,
+        currentTime: api.getCurrentTime(),
+        buffered: api.getSecondsLoaded()
+      }));
+
+      const getBuffered = () => setState(old => ({ ...old,
+        buffered: api.getSecondsLoaded()
+      }));
+
+      const historyPlayEnd = () => setState(old => ({ ...old,
+        isEnd: true
+      }));
+
+      const reload = () => setState(old => ({ ...old,
+        isEnd: false,
+        currentTime: api.getCurrentTime()
+      }));
+
+      const seekendPlay = () => api.play();
+
+      event.addEventListener('loadedmetadata', getDuration);
+      event.addEventListener('durationchange', getDuration);
+      event.addEventListener('timeupdate', getCurrentTime);
+      event.addEventListener('progress', getBuffered);
+      event.addEventListener('suspend', getBuffered);
+      event.addEventListener('seeked', seekendPlay);
+      event.on(EventName.HISTORY_PLAY_END, historyPlayEnd);
+      event.on(EventName.RELOAD, reload);
+      return () => {
+        event.removeEventListener('loadedmetadata', getDuration);
+        event.removeEventListener('durationchange', getDuration);
+        event.removeEventListener('timeupdate', getCurrentTime);
+        event.removeEventListener('progress', getBuffered);
+        event.removeEventListener('suspend', getBuffered);
+        event.removeEventListener('seeked', seekendPlay);
+        event.off(EventName.HISTORY_PLAY_END, historyPlayEnd);
+        event.off(EventName.RELOAD, reload);
+      };
+    }, [event, api]);
+    const changePlayTime = React.useCallback(percent => {
+      const currentTime = percent * historyList.duration; //修正一下误差
+
+      const [index, time] = computedTimeAndIndex(historyList, currentTime);
+      seekTo(currentTime, index, historyList.beginDate + currentTime * 1000);
+      setState(old => ({ ...old,
+        isEnd: false
+      }));
+    }, [historyList]);
+
+    const renderTimeLineTips = percent => {
+      const currentTime = percent * historyList.duration * 1000;
+      const date = dateFormat(historyList.beginDate + currentTime);
+      return /*#__PURE__*/React__default['default'].createElement("span", null, date);
+    };
+
+    const {
+      currentTime,
+      buffered,
+      isEnd
+    } = state;
+    const lineList = React.useMemo(() => computedLineList(historyList), [historyList]);
+    const currentLine = React.useMemo(() => lineList.filter((_, i) => i < playIndex).map(v => v.size), [playIndex, lineList]);
+    const currentIndexTime = React.useMemo(() => currentLine.length === 0 ? 0 : currentLine.length > 1 ? currentLine.reduce((p, c) => p + c) : currentLine[0], [currentLine]);
+    const playPercent = React.useMemo(() => currentTime / historyList.duration * 100 + currentIndexTime, [currentIndexTime, historyList, currentTime]);
+    const bufferedPercent = React.useMemo(() => buffered / historyList.duration * 100 + currentIndexTime, [historyList, currentIndexTime, buffered]);
+    return /*#__PURE__*/React__default['default'].createElement("div", {
+      className: `video-time-line-layout ${!visibel ? 'hide-time-line' : ''}`
+    }, /*#__PURE__*/React__default['default'].createElement(IconFont, {
+      type: "lm-player-PrevFast",
+      onClick: () => api.backWind(),
+      className: "time-line-action-item"
+    }), /*#__PURE__*/React__default['default'].createElement(Slider, {
+      className: "time-line-box",
+      currentPercent: isEnd ? '100' : playPercent,
+      availablePercent: bufferedPercent,
+      onChange: changePlayTime,
+      renderTips: renderTimeLineTips
+    }, /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, lineList.map((v, i) => {
+      const currentSizeLine = lineList.filter((v, i2) => i2 < i).map(v => v.size);
+      const currentIndexSize = currentSizeLine.length === 0 ? 0 : currentSizeLine.length > 1 ? currentSizeLine.reduce((p, c) => p + c) : currentSizeLine[0];
+      const currentSize = v.size || 0;
+      return /*#__PURE__*/React__default['default'].createElement("div", {
+        className: `history-time-line-item ${v.disabled ? 'history-time-line-disabled' : ''}`,
+        key: i,
+        style: {
+          width: `${currentSize}%`,
+          left: `${currentIndexSize}%`
+        }
+      });
+    }))), /*#__PURE__*/React__default['default'].createElement(IconFont, {
+      type: "lm-player-NextFast_Light",
+      onClick: () => api.fastForward(),
+      className: "time-line-action-item"
+    }));
+  }
+
+  TineLine.propTypes = {
+    event: PropTypes__default['default'].object,
+    api: PropTypes__default['default'].object,
+    changePlayIndex: PropTypes__default['default'].func,
+    playIndex: PropTypes__default['default'].number,
+    historyList: PropTypes__default['default'].array,
+    seekTo: PropTypes__default['default'].func,
+    visibel: PropTypes__default['default'].bool
+  };
+
+  /**
+   * 前端录像播放 http-flv
+   * @param {*} param0 
+   * @returns 
+   */
+
+  function FPlayer({
+    type,
+    historyList,
+    defaultTime,
+    className,
+    autoPlay,
+    muted,
+    poster,
+    playsinline,
+    loop,
+    preload,
+    children,
+    onInitPlayer,
+    screenNum,
+    speed,
+    seekFrontRangeData,
+    ...props
+  }) {
+    const playContainerRef = React.useRef(null);
+    const [playerObj, setPlayerObj] = React.useState(null);
+    const [seekTime, setSeekTime] = React.useState(0);
+    const [playIndex, setPlayIndex] = React.useState(0);
+    const playerRef = React.useRef(null);
+    const [playStatus, setPlayStatus] = React.useState(() => computedTimeAndIndex(historyList, defaultTime));
+    React.useEffect(() => {
+      setPlayIndex(computedTimeAndIndex(historyList, seekTime)[0]);
+    }, [seekTime]);
+    const defaultSeekTime = React.useMemo(() => playStatus[1], [playStatus]);
+    const rate = React.useMemo(() => getScreenRate(screenNum), [screenNum]);
+    const [resolution, setResolution] = React.useState(rate);
+    const [colorPicker, setColorPicker] = React.useState(null);
+    const file = React.useMemo(() => {
+      let url;
+
+      try {
+        url = historyList.fragments[playIndex].file;
+      } catch (e) {
+        console.warn('未找到播放地址！', historyList);
+      }
+
+      return url;
+    }, [historyList, playIndex]);
+    /**
+     * 重写api下的seekTo方法
+     */
+
+    const seekTo = React.useCallback((currentTime, pIndex, dateTime) => {
+      if (playerRef.current.event && playerRef.current.api) {
+        seekFrontRangeData && seekFrontRangeData(`${dateTime}`.substr(0, 10), function (msg) {
+          if (msg == 'error') {
+            //seek异常时， 根据当前seektime获取当前对应的索引
+            changePlayIndex(pIndex);
+          } else {
+            setSeekTime(currentTime);
+          }
+        });
+      }
+    }, [playIndex, historyList]);
+    /**
+     * 录像播放片段-索引发生变化
+     * 自动播放
+     */
+
+    const changePlayIndex = React.useCallback(index => {
+      try {
+        if (index > historyList.fragments.length - 1) {
+          return playerRef.current && playerRef.current.event && playerRef.current.event.emit(EventName.HISTORY_PLAY_END);
+        }
+
+        if (!historyList.fragments[index].file) {
+          return changePlayIndex(index + 1);
+        }
+
+        if (playerRef.current && playerRef.current.event) {
+          playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
+        }
+
+        setPlayIndex(index);
+      } catch (error) {// console.error('historyList data error', historyList)
+      }
+    }, [historyList]); // 重装
+
+    const reloadHistory = React.useCallback(() => {
+      if (playStatus[0] === 0) {
+        playerRef.current.api.seekTo(defaultSeekTime);
+      }
+
+      setPlayIndex(0);
+      playerRef.current.event.emit(EventName.RELOAD);
+    }, []);
+    React.useEffect(() => {
+      if (!file) {
+        changePlayIndex(playIndex + 1);
+      }
+
+      file && playerObj && playerObj.api.setPlaybackRate(speed);
+    }, [file, playIndex, historyList, speed]);
+    React.useEffect(() => () => {
+      if (playerRef.current && playerRef.current.event) {
+        playerRef.current.event.destroy();
+      }
+
+      if (playerRef.current && playerRef.current.api) {
+        playerRef.current.api.destroy();
+      }
+
+      playerRef.current = null;
+    }, [file]);
+    React.useEffect(() => {
+      console.info('前端录像播放...');
+
+      if (!file) {
+        return;
+      }
+
+      const playerObject = {
+        playContainer: playContainerRef.current,
+        video: playContainerRef.current.querySelector('video'),
+        resolution: resolution,
+        screenNum: screenNum
+      };
+      const formartType = getVideoType(file);
+
+      if (formartType === 'flv' || type === 'flv') {
+        playerObject.flv = createFlvPlayer$1(playerObject.video, { ...props,
+          file: decodeService({
+            file,
+            resolution
+          })
+        });
+      } else {
+        playerObject.video.src = file;
+      }
+
+      if (playerObject.event) {
+        playerObject.event.destroy();
+      }
+
+      playerObject.event = new VideoEventInstance(playerObject.video);
+
+      if (playerObject.api) {
+        playerObject.api.destroy();
+      }
+
+      playerObject.api = new Api(playerObject);
+      playerRef.current = playerObject;
+      setPlayerObj(playerObject);
+
+      if (defaultSeekTime) {
+        playerObject.api.seekHsTo(defaultSeekTime);
+      }
+
+      if (onInitPlayer) {
+        onInitPlayer(Object.assign({}, playerObject.api.getApi(), playerObject.event.getApi(), {
+          seekTo,
+          changePlayIndex,
+          reload: reloadHistory
+        }));
+      } // 倍数
+
+
+      playerObject.api.setPlaybackRate(speed);
+    }, [historyList, file]);
+    return /*#__PURE__*/React__default['default'].createElement("div", {
+      className: `lm-player-container ${className}`,
+      ref: playContainerRef
+    }, /*#__PURE__*/React__default['default'].createElement("div", {
+      className: "player-mask-layout"
+    }, /*#__PURE__*/React__default['default'].createElement("video", {
+      autoPlay: autoPlay,
+      preload: preload,
+      muted: muted,
+      poster: poster,
+      controls: false,
+      crossorigin: "Anonymous",
+      usecors: true,
+      playsInline: playsinline,
+      loop: loop,
+      style: colorPicker
+    })), /*#__PURE__*/React__default['default'].createElement(VideoFTools, {
+      defaultTime: defaultSeekTime,
+      playerObj: playerObj,
+      isLive: props.isLive,
+      hideContrallerBar: props.hideContrallerBar,
+      errorReloadTimer: props.errorReloadTimer,
+      scale: props.scale,
+      snapshot: props.snapshot,
+      colorPicker: value => {
+        setColorPicker(value);
+      },
+      leftExtContents: props.leftExtContents,
+      leftMidExtContents: props.leftMidExtContents,
+      rightExtContents: props.rightExtContents,
+      rightMidExtContents: props.rightMidExtContents,
+      draggable: props.draggable,
+      changePlayIndex: changePlayIndex,
+      reloadHistory: reloadHistory,
+      historyList: historyList,
+      playIndex: playIndex,
+      seekTo: seekTo,
+      key: file
+    }), children);
+  }
+
+  function VideoFTools({
+    playerObj,
+    draggable,
+    isLive,
+    hideContrallerBar,
+    scale,
+    snapshot,
+    leftExtContents,
+    leftMidExtContents,
+    rightExtContents,
+    rightMidExtContents,
+    errorReloadTimer,
+    changePlayIndex,
+    reloadHistory,
+    historyList,
+    seekTo,
+    playIndex,
+    defaultTime,
+    colorPicker
+  }) {
+    if (!playerObj) {
+      return /*#__PURE__*/React__default['default'].createElement(NoSource, null);
+    }
+
+    return /*#__PURE__*/React__default['default'].createElement(React__default['default'].Fragment, null, /*#__PURE__*/React__default['default'].createElement(VideoMessage, {
+      api: playerObj.api,
+      event: playerObj.event
+    }), draggable && /*#__PURE__*/React__default['default'].createElement(DragEvent, {
+      playContainer: playerObj.playContainer,
+      api: playerObj.api,
+      event: playerObj.event
+    }), !hideContrallerBar && /*#__PURE__*/React__default['default'].createElement(ContrallerEvent, {
+      event: playerObj.event,
+      playContainer: playerObj.playContainer
+    }, /*#__PURE__*/React__default['default'].createElement(ContrallerBar, {
+      api: playerObj.api,
+      event: playerObj.event,
+      playContainer: playerObj.playContainer,
+      video: playerObj.video,
+      colorPicker: colorPicker,
+      snapshot: snapshot,
+      rightExtContents: rightExtContents,
+      rightMidExtContents: rightMidExtContents,
+      scale: scale,
+      isHistory: true,
+      isLive: isLive,
+      leftExtContents: leftExtContents,
+      leftMidExtContents: leftMidExtContents,
+      reloadHistory: reloadHistory
     }), /*#__PURE__*/React__default['default'].createElement(TineLine, {
       defaultTime: defaultTime,
       changePlayIndex: changePlayIndex,
@@ -4362,6 +4905,98 @@
       changePlayIndex: changePlayIndex,
       playIndex: playIndex
     }));
+  }
+
+  FPlayer.propTypes = {
+    historyList: PropTypes__default['default'].object.isRequired,
+    //播放地址 必填
+    errorReloadTimer: PropTypes__default['default'].number,
+    //视频错误重连次数
+    type: PropTypes__default['default'].oneOf(['flv', 'hls', 'native']),
+    //强制视频流类型
+    onInitPlayer: PropTypes__default['default'].func,
+    isDraggable: PropTypes__default['default'].bool,
+    isScale: PropTypes__default['default'].bool,
+    muted: PropTypes__default['default'].string,
+    autoPlay: PropTypes__default['default'].bool,
+    playsInline: PropTypes__default['default'].bool,
+    preload: PropTypes__default['default'].string,
+    poster: PropTypes__default['default'].string,
+    loop: PropTypes__default['default'].bool,
+    defaultTime: PropTypes__default['default'].number,
+    className: PropTypes__default['default'].string,
+    playsinline: PropTypes__default['default'].bool,
+    children: PropTypes__default['default'].any,
+    rightExtContents: PropTypes__default['default'].element,
+    rightMidExtContents: PropTypes__default['default'].element,
+    leftExtContents: PropTypes__default['default'].element,
+    leftMidExtContents: PropTypes__default['default'].element,
+    flvOptions: PropTypes__default['default'].object,
+    flvConfig: PropTypes__default['default'].object
+  };
+  FPlayer.defaultProps = {
+    draggable: true,
+    scale: true,
+    errorReloadTimer: 5,
+    muted: 'muted',
+    autoPlay: true,
+    playsInline: false,
+    preload: 'auto',
+    loop: false,
+    defaultTime: 0,
+    historyList: {
+      beginDate: 0,
+      duration: 0,
+      fragments: []
+    }
+  };
+
+  function HistoryPlayer({
+    type,
+    historyList,
+    defaultTime,
+    className,
+    autoPlay,
+    muted,
+    poster,
+    playsinline,
+    loop,
+    preload,
+    children,
+    onInitPlayer,
+    screenNum,
+    speed,
+    seekFrontRangeData,
+    ...props
+  }) {
+    const formartType = React.useMemo(() => {
+      try {
+        const fragment = historyList.fragments.find(item => {
+          if (item.file) return item;
+        });
+        return getVideoType(fragment.file);
+      } catch (error) {
+        return '';
+      }
+    }, [historyList]);
+    const Player = formartType === 'flv' ? FPlayer : HPlayer;
+    return /*#__PURE__*/React__default['default'].createElement(Player, _extends({
+      type: type,
+      historyList: historyList,
+      defaultTime: defaultTime,
+      className: className,
+      autoPlay: autoPlay,
+      muted: muted,
+      poster: poster,
+      playsinline: playsinline,
+      loop: loop,
+      preload: preload,
+      children: children,
+      onInitPlayer: onInitPlayer,
+      screenNum: screenNum,
+      seekFrontRangeData: seekFrontRangeData,
+      speed: speed
+    }, props));
   }
 
   HistoryPlayer.propTypes = {

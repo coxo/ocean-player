@@ -949,7 +949,7 @@ const VIDEO_RESOLUTION = {
     name: '标清',
     resolution: '480p',
     bitrate: '1M',
-    templateCode: 1710011,
+    templateCode: 171002,
     show: false
   },
   '5': {
@@ -4206,10 +4206,10 @@ function HPlayer({
       if (playerRef.current && playerRef.current.event) {
         playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
       }
+
+      setPlayStatus([index, 0]);
     } catch (error) {// console.error('historyList data error', historyList)
     }
-
-    setPlayStatus([index, 0]);
   }, [historyList]);
   const reloadHistory = useCallback(() => {
     if (playStatus[0] === 0) {
@@ -4680,10 +4680,10 @@ function FPlayer({
       if (playerRef.current && playerRef.current.event) {
         playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
       }
+
+      setPlayIndex(index);
     } catch (error) {// console.error('historyList data error', historyList)
     }
-
-    setPlayIndex(index);
   }, [historyList]); // 重装
 
   const reloadHistory = useCallback(() => {

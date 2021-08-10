@@ -80,10 +80,10 @@ function FPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
         if (playerRef.current && playerRef.current.event) {
           playerRef.current.event.emit(EventName.CHANGE_PLAY_INDEX, index);
         }
+        setPlayIndex(index)
       } catch (error) {
         // console.error('historyList data error', historyList)
       }
-      setPlayIndex(index)
     },
     [historyList]
   );
