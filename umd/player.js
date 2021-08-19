@@ -1431,6 +1431,16 @@
       callback && callback();
     });
   }
+  function monitorHlsFragments(hls, resolution) {
+    console.log('Start Processing HLS TS...');
+    hls.on('hlsManifestParsed', (event, data) => {
+      if (data.levels[0] && data.levels[0].details.fragments) {
+        data.levels[0].details.fragments.forEach(function (item) {
+          item.relurl = transformFn(item.relurl, sessionStorage.getItem("__PLAYER_RESOLUTION_CUR", resolution));
+        });
+      }
+    });
+  }
   function decodeService(player, onToken) {
     const playeMode = detectorPlayeMode();
     const key = genuuid();
@@ -1449,6 +1459,23 @@
 
       default:
         url = browserDecoding(player);
+        break;
+    }
+
+    return url;
+  }
+  function transformFn(file, resolution) {
+    const playeMode = detectorPlayeMode();
+    genuuid();
+    let url = '';
+
+    switch (playeMode) {
+      case 1:
+        url = videoTansDecoding(file, resolution);
+        break;
+
+      default:
+        url = file;
         break;
     }
 
@@ -1530,6 +1557,34 @@
 
     console.log(file + param1 + param3);
     return lcStore$1.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3;
+  }
+  /**
+   * 客户端插件访问入口-录像
+   * @param {*} url 
+   * @returns 
+   */
+
+  function videoTansDecoding(url, resolution) {
+    var _BASE64$encode3, _BASE64$encode3$repla, _BASE64$encode3$repla2;
+
+    let param1 = '';
+    let param2 = '';
+    let fileUrl = url; // 是否加密
+
+    fileUrl = fileUrl + getGlobalCache(GL_CACHE.DM); // 分辨率，如果为空，为原始分辨率
+
+    if (resolution) {
+      // 分辨率
+      param1 = '&resolution=' + resolution; // 根据分辨率获取码率
+
+      param2 = '&bitrate=' + findVideoAttribute(resolution, 'bitrate');
+    }
+
+    const url_info = {
+      port: getLocalPort(),
+      pull_uri: (_BASE64$encode3 = __BASE64.encode(fileUrl)) === null || _BASE64$encode3 === void 0 ? void 0 : (_BASE64$encode3$repla = _BASE64$encode3.replaceAll('=', '')) === null || _BASE64$encode3$repla === void 0 ? void 0 : (_BASE64$encode3$repla2 = _BASE64$encode3$repla.replaceAll('/', '_')) === null || _BASE64$encode3$repla2 === void 0 ? void 0 : _BASE64$encode3$repla2.replaceAll('+', '-')
+    };
+    return lcStore$1.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2;
   }
 
   function IconFont({
@@ -3487,6 +3542,7 @@
 
         try {
           player.hls = createHlsPlayer(player.video, file);
+          monitorHlsFragments(player.hls, resolution);
         } catch (e) {
           console.error(e);
         }
@@ -4264,6 +4320,9 @@
       playerRef.current = null;
     }, [file]);
     React.useEffect(() => {
+      sessionStorage.setItem("__PLAYER_RESOLUTION_CUR", resolution);
+    }, [resolution]);
+    React.useEffect(() => {
       console.info('云录像播放...');
 
       if (!file) {
@@ -4292,6 +4351,7 @@
       if (formartType === 'm3u8' || type === 'hls') {
         isInit = true;
         playerObject.hls = createHlsPlayer(playerObject.video, file);
+        monitorHlsFragments(playerObject.hls, resolution);
       }
 
       if (!isInit && (!['flv', 'm3u8'].includes(formartType) || type === 'native')) {
@@ -4350,6 +4410,9 @@
       hideContrallerBar: props.hideContrallerBar,
       errorReloadTimer: props.errorReloadTimer,
       scale: props.scale,
+      switchResolution: resolution => {
+        setResolution(resolution);
+      },
       snapshot: props.snapshot,
       colorPicker: value => {
         setColorPicker(value);
@@ -4375,6 +4438,7 @@
     hideContrallerBar,
     scale,
     snapshot,
+    switchResolution,
     leftExtContents,
     leftMidExtContents,
     rightExtContents,
@@ -4411,6 +4475,7 @@
       snapshot: snapshot,
       rightExtContents: rightExtContents,
       rightMidExtContents: rightMidExtContents,
+      switchResolution: switchResolution,
       scale: scale,
       isHistory: true,
       isLive: isLive,
@@ -4739,6 +4804,9 @@
       playerRef.current = null;
     }, [file]);
     React.useEffect(() => {
+      sessionStorage.setItem("__PLAYER_RESOLUTION_CUR", resolution);
+    }, [resolution]);
+    React.useEffect(() => {
       console.info('前端录像播放...');
 
       if (!file) {
@@ -4816,6 +4884,9 @@
       hideContrallerBar: props.hideContrallerBar,
       errorReloadTimer: props.errorReloadTimer,
       scale: props.scale,
+      switchResolution: resolution => {
+        setResolution(resolution);
+      },
       snapshot: props.snapshot,
       colorPicker: value => {
         setColorPicker(value);
@@ -4839,6 +4910,7 @@
     draggable,
     isLive,
     hideContrallerBar,
+    switchResolution,
     scale,
     snapshot,
     leftExtContents,
@@ -4877,6 +4949,7 @@
       snapshot: snapshot,
       rightExtContents: rightExtContents,
       rightMidExtContents: rightMidExtContents,
+      switchResolution: switchResolution,
       scale: scale,
       isHistory: true,
       isLive: isLive,

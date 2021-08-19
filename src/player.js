@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo, useCallback, useContext, createContext } from 'react';
 import VideoEvent from './event';
-import { getVideoType, createFlvPlayer, createHlsPlayer,detectorPlayeMode, decodeService, getScreenRate, installState,getGlobalCache } from './util';
+import { getVideoType, createFlvPlayer, createHlsPlayer,detectorPlayeMode, decodeService, getScreenRate, installState,getGlobalCache, monitorHlsFragments } from './util';
 import ContrallerBar from './contraller_bar';
 import ContrallerEvent from './event/contrallerEvent';
 import VideoMessage, { NoSource, ErrorContainer} from './message';
@@ -224,6 +224,7 @@ function ZPlayer({ type, file, className, autoPlay, muted, poster, playsinline, 
       isInit = true;
       try{
         player.hls = createHlsPlayer(player.video, file);
+        monitorHlsFragments(player.hls, resolution)
       }catch(e) {
         console.error(e)
       }

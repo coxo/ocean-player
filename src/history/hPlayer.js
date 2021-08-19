@@ -10,7 +10,7 @@ import VideoEvent from '../event';
 import PlayEnd from './play_end';
 import EventName from '../event/eventName';
 import ContrallerEvent from '../event/contrallerEvent';
-import { getVideoType, createHlsPlayer, decodeService, getScreenRate } from '../util';
+import { getVideoType, createHlsPlayer, decodeService, getScreenRate, monitorHlsFragments } from '../util';
 import { computedTimeAndIndex } from './utils';
 
 
@@ -114,7 +114,10 @@ function HPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
     },
     [file]
   );
-
+  useEffect(() => {
+    sessionStorage.setItem("__PLAYER_RESOLUTION_CUR", resolution)
+  }, [resolution]);
+  
   useEffect(() => {
     console.info('云录像播放...')
     if (!file) {
@@ -135,6 +138,7 @@ function HPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
     if (formartType === 'm3u8' || type === 'hls') {
       isInit = true;
       playerObject.hls = createHlsPlayer(playerObject.video, file);
+      monitorHlsFragments(playerObject.hls, resolution)
     }
     if (!isInit && (!['flv', 'm3u8'].includes(formartType) || type === 'native')) {
       playerObject.video.src = file;
@@ -172,6 +176,9 @@ function HPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
         hideContrallerBar={props.hideContrallerBar}
         errorReloadTimer={props.errorReloadTimer}
         scale={props.scale}
+        switchResolution={(resolution) => {
+          setResolution(resolution)
+        }}
         snapshot={props.snapshot}
         colorPicker={(value)=>{setColorPicker(value)}}
         leftExtContents={props.leftExtContents}
@@ -198,6 +205,7 @@ function VideoTools({
   hideContrallerBar,
   scale,
   snapshot,
+  switchResolution,
   leftExtContents,
   leftMidExtContents,
   rightExtContents,
@@ -229,6 +237,7 @@ function VideoTools({
             snapshot={snapshot}
             rightExtContents={rightExtContents}
             rightMidExtContents={rightMidExtContents}
+            switchResolution={switchResolution}
             scale={scale}
             isHistory={true}
             isLive={isLive}

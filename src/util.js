@@ -456,6 +456,17 @@ export function installState(callback){
 });
 }
 
+export function monitorHlsFragments(hls, resolution){
+  console.log('Start Processing HLS TS...')
+  hls.on('hlsManifestParsed',(event,data)=>{
+    if(data.levels[0] && data.levels[0].details.fragments){
+      data.levels[0].details.fragments.forEach(function(item){
+        item.relurl = transformFn(item.relurl,sessionStorage.getItem("__PLAYER_RESOLUTION_CUR", resolution))
+      })
+    }
+  })
+}
+
 export function decodeService(player, onToken){
   const playeMode = detectorPlayeMode()
   const key = genuuid()
@@ -472,6 +483,22 @@ export function decodeService(player, onToken){
       break;
     default:
       url = browserDecoding(player)
+      break;
+  }
+  return url
+}
+
+export function transformFn(file, resolution){
+  const playeMode = detectorPlayeMode()
+  const key = genuuid()
+  let url = ''
+
+  switch (playeMode) {
+    case 1:
+      url = videoTansDecoding(file, resolution)
+      break;
+    default:
+      url = file
       break;
   }
   return url
@@ -549,3 +576,30 @@ export function tansDecoding(player){
   return lcStore.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2 + param3
 }
 
+
+/**
+ * 客户端插件访问入口-录像
+ * @param {*} url 
+ * @returns 
+ */
+ export function videoTansDecoding(url, resolution){
+  let param1 = ''
+  let param2 = ''
+  let fileUrl = url
+  // 是否加密
+  fileUrl = fileUrl + getGlobalCache(GL_CACHE.DM)
+    // 分辨率，如果为空，为原始分辨率
+  if(resolution){
+    // 分辨率
+    param1 = '&resolution=' + resolution
+    // 根据分辨率获取码率
+    param2 = '&bitrate=' + findVideoAttribute(resolution, 'bitrate')
+  }
+
+  const url_info ={
+      port: getLocalPort(),
+      pull_uri: BASE64.encode(fileUrl)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','-')
+  }
+  
+  return lcStore.getTranscodingStream.value.replace('<pull_uri>', url_info.pull_uri).replace('<port>', url_info.port) + param1 + param2
+}

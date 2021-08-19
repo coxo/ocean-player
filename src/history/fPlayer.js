@@ -119,6 +119,10 @@ function FPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
     },
     [file]
   );
+  
+  useEffect(() => {
+    sessionStorage.setItem("__PLAYER_RESOLUTION_CUR", resolution)
+  }, [resolution]);
 
   useEffect(() => {
     console.info('前端录像播放...')
@@ -172,6 +176,9 @@ function FPlayer({ type, historyList, defaultTime, className, autoPlay, muted, p
         hideContrallerBar={props.hideContrallerBar}
         errorReloadTimer={props.errorReloadTimer}
         scale={props.scale}
+        switchResolution={(resolution) => {
+          setResolution(resolution)
+        }}
         snapshot={props.snapshot}
         colorPicker={(value)=>{setColorPicker(value)}}
         leftExtContents={props.leftExtContents}
@@ -196,6 +203,7 @@ function VideoFTools({
   draggable,
   isLive,
   hideContrallerBar,
+  switchResolution,
   scale,
   snapshot,
   leftExtContents,
@@ -229,6 +237,7 @@ function VideoFTools({
             snapshot={snapshot}
             rightExtContents={rightExtContents}
             rightMidExtContents={rightMidExtContents}
+            switchResolution={switchResolution}
             scale={scale}
             isHistory={true}
             isLive={isLive}
