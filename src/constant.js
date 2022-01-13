@@ -10,6 +10,7 @@ export const hostUrl = 'http://127.0.0.1';
     SR :'switchRate',
     PT :'palette',
     FR_CON :'connectOnce',
+    UNIQUE : 'unique'
   }
   
   /**

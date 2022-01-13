@@ -907,7 +907,8 @@ const GL_CACHE = {
   DM: 'decryptionMode',
   SR: 'switchRate',
   PT: 'palette',
-  FR_CON: 'connectOnce'
+  FR_CON: 'connectOnce',
+  UNIQUE: 'unique'
 };
 /**
  * 客户端插件模式，随机端口
@@ -1407,13 +1408,17 @@ function installState(callback) {
 }
 function monitorHlsFragments(hls, resolution) {
   console.log('Start Processing HLS TS...');
-  hls.on('hlsManifestParsed', (event, data) => {
-    if (data.levels[0] && data.levels[0].details.fragments) {
-      data.levels[0].details.fragments.forEach(function (item) {
-        item.relurl = transformFn(item.relurl, sessionStorage.getItem("__PLAYER_RESOLUTION_CUR", resolution));
-      });
-    }
-  });
+  const playeMode = detectorPlayeMode();
+
+  if (playeMode == 1) {
+    hls.on('hlsManifestParsed', (event, data) => {
+      if (data.levels[0] && data.levels[0].details.fragments) {
+        data.levels[0].details.fragments.forEach(function (item) {
+          item.relurl = transformFn(item.relurl, sessionStorage.getItem("__PLAYER_RESOLUTION_CUR", resolution));
+        });
+      }
+    });
+  }
 }
 function decodeService(player, onToken) {
   const playeMode = detectorPlayeMode();
@@ -1462,6 +1467,10 @@ function transformFn(file, resolution) {
  */
 
 function browserDecoding(player) {
+  if (getGlobalCache(GL_CACHE.UNIQUE)) {
+    return (player === null || player === void 0 ? void 0 : player.file) + '&timestamp=' + new Date().getTime();
+  }
+
   return player === null || player === void 0 ? void 0 : player.file;
 }
 /**

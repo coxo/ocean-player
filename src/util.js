@@ -351,7 +351,7 @@ export function getLocalPort(){
  * 获取系统版本
  * @returns 
  */
- export function getAppPlayerVersion(){
+export function getAppPlayerVersion(){
   return sessionStorage.getItem('_APP_PLAY_VERSION')
 }
 
@@ -458,13 +458,16 @@ export function installState(callback){
 
 export function monitorHlsFragments(hls, resolution){
   console.log('Start Processing HLS TS...')
-  hls.on('hlsManifestParsed',(event,data)=>{
-    if(data.levels[0] && data.levels[0].details.fragments){
-      data.levels[0].details.fragments.forEach(function(item){
-        item.relurl = transformFn(item.relurl,sessionStorage.getItem("__PLAYER_RESOLUTION_CUR", resolution))
-      })
-    }
-  })
+  const playeMode = detectorPlayeMode()
+  if(playeMode == 1){
+    hls.on('hlsManifestParsed',(event,data)=>{
+      if(data.levels[0] && data.levels[0].details.fragments){
+        data.levels[0].details.fragments.forEach(function(item){
+          item.relurl = transformFn(item.relurl,sessionStorage.getItem("__PLAYER_RESOLUTION_CUR", resolution))
+        })
+      }
+    })
+  }
 }
 
 export function decodeService(player, onToken){
@@ -510,7 +513,10 @@ export function transformFn(file, resolution){
  * @returns 
  */
 export function browserDecoding(player){
-  return player?.file
+  if(getGlobalCache(GL_CACHE.UNIQUE)){
+    return player?.file + '&timestamp=' + (new Date().getTime())
+  }
+  return player?.file 
 }
 
 /**
