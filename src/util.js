@@ -424,7 +424,7 @@ export function compare(a, b) {
  */
 export function installState(callback){
   // 进行类型检测 是否插件模式
-  if (detectorPlayeMode() == 0) return;
+  if (detectorPlayeMode() == 0 || detectorPlayeMode() == 2) return;
 
   if(sessionStorage.getItem('_TEMP_PLAY_CODE') == '10000') return;
   // 进行本地检测
@@ -531,15 +531,16 @@ export function serverDecoding(player){
   // 从file中提取 Authorization
   const authorization = getQueryString(file, 'Authorization')
   const templateCode = findVideoAttribute(resolution,'templateCode')
+  let lastParam = ''
 
   // 原始码流
   if(templateCode == 10000){
-    // 浏览器flv解码
-    return browserDecoding(player)
+    const url = file.split('?')[0];
+    lastParam =  '&cid=' + url.substring(url.lastIndexOf("\/") + 1,url.length);
   }
 
   const resourceUrl = BASE64.encode(file)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','-')
-  return ip + `/staticResource/v2/video/media/transfer?Authorization=${authorization}&templateCode=${templateCode}&resourceUrl=${resourceUrl}`
+  return ip + `/staticResource/v2/video/media/transfer?Authorization=${authorization}&templateCode=${templateCode}&resourceUrl=${resourceUrl}` + lastParam
 }
 
 /**

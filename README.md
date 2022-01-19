@@ -19,9 +19,9 @@ export { Player as default, Player, HistoryPlayer, createHistoryPlayer, createPl
 
 ```javascript
 
-yarn add lm-player
+yarn add ocean-player
 //or
-npm i lm-player
+npm i ocean-player
 
 ```
 
@@ -31,7 +31,7 @@ npm i lm-player
 
 ```javascript
 //React simple demo
-import LMPlayer from 'lm-player'
+import LMPlayer from 'ocean-player'
 ReactDOM.render(
   <LMPlayer
     file={`./video.mp4?${Math.random()}`}
@@ -51,7 +51,7 @@ ReactDOM.render(
 
 ```javascript
 //other simple demo
-import LMPlayer from 'lm-player'
+import LMPlayer from 'ocean-player'
 const container = document.getElementById('root')
 LMPlayer.createPlayer({
   container,
@@ -63,6 +63,38 @@ LMPlayer.createPlayer({
   }
 })
 ```
+flv地址示例：  
+http://ip:port/staticResource/v2/video/live.flv/2147511361?Authorization=eyJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25JZCI6IjEwMDExMDAwMDAwMSIsImV4dCI6MTY0MTgxNTMyOTMxOSwidWlkIjoiMTAxMDAzMDAwMDAxIiwidmFsaWRTdGF0ZSI6MTA0NDA2LCJyb2xlSWQiOlsxMDEwMDIwMDAwMDFdLCJ2YWxpZFRpbWUiOm51bGwsIm9wdENlbnRlcklkIjoiMTAwMTAwMTAwMDAxIiwidXNlclR5cGUiOjEwMDcwMiwiaWF0IjoxNjQxNTU2MTI5MzE5fQ.5SZZ8BzobAgjlHFAkYsoCAIr4TK90h3xrgO3SgjW850
+
+注意：开流地址内，存在.flv或者protocol=flv，可识别为flv开流 
+
+
+浏览器本地存储（localStorage）相关配置： 
+
+key: PY_PLUS 
+
+value:
+
+{
+"mode": 0,
+"version": "v1.0.10",
+"unique": true,
+"reloadTimer": 10,
+"switchRate": true,
+"patternAuth": false,
+"palette": true,
+"connectOnce": false
+}
+
+| name                  | type            | required | description                            |
+| --------------------- | --------------- | -------- | -------------------------------------- |
+| `mode`                | `number`       | `true`  | 视频开流模式 0：浏览器默认方式-仅支持264，1：客户端插件模式（264/265/svac），2：综合媒体方式(硬解)                            |
+| `version`              | `string`       | ``  | 当前使用版本好      |
+| `unique`                | `boolean`        | `false`  | 可选 默认值`true`，请求连接后是否添加时间戳 |
+| `reloadTimer`        | `number`      | `false`  | 可选 默认值 5 ,拉流失败时重新拉取次数                  |
+| `switchRate`           | `boolean`       | `false`  | 可选 分辨率切换               |
+| `palette`   | `boolean`       | `false`  | 可选 默认值 `false` 调色板 --录像画面调色             |
+| `connectOnce`   | `boolean`       | `false`  | 可选，默认值`false`  初始化拉流是否单次，启用后reloadTimer失效             |
 
 # `Props`
 
