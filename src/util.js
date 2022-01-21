@@ -525,22 +525,23 @@ export function browserDecoding(player){
  * @param {*} onToken 
  * @returns 
  */
-export function serverDecoding(player){
+ export function serverDecoding(player){
   const {file, resolution} = player
   const ip = window.location.origin
   // 从file中提取 Authorization
   const authorization = getQueryString(file, 'Authorization')
-  const templateCode = findVideoAttribute(resolution,'templateCode')
-  let lastParam = `&templateCode=${templateCode}`
+  let templateCode = findVideoAttribute(resolution,'templateCode')
+  let lastParam = ''
 
   // 原始码流
   if(templateCode == 10000){
     const url = file.split('?')[0];
     lastParam =  '&cid=' + url.substring(url.lastIndexOf("\/") + 1,url.length);
+    templateCode = 171001
   }
 
   const resourceUrl = BASE64.encode(file)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','-')
-  return ip + `/staticResource/v2/video/media/transfer?Authorization=${authorization}&resourceUrl=${resourceUrl}` + lastParam
+  return ip + `/staticResource/v2/video/media/transfer?Authorization=${authorization}&templateCode=${templateCode}&resourceUrl=${resourceUrl}` + lastParam
 }
 
 /**
