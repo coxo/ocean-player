@@ -1491,7 +1491,7 @@ function serverDecoding(player) {
 
   const authorization = getQueryString(file, 'Authorization');
   const templateCode = findVideoAttribute(resolution, 'templateCode');
-  let lastParam = ''; // 原始码流
+  let lastParam = `&templateCode=${templateCode}`; // 原始码流
 
   if (templateCode == 10000) {
     const url = file.split('?')[0];
@@ -1499,7 +1499,7 @@ function serverDecoding(player) {
   }
 
   const resourceUrl = (_BASE64$encode = __BASE64.encode(file)) === null || _BASE64$encode === void 0 ? void 0 : (_BASE64$encode$replac = _BASE64$encode.replaceAll('=', '')) === null || _BASE64$encode$replac === void 0 ? void 0 : (_BASE64$encode$replac2 = _BASE64$encode$replac.replaceAll('/', '_')) === null || _BASE64$encode$replac2 === void 0 ? void 0 : _BASE64$encode$replac2.replaceAll('+', '-');
-  return ip + `/staticResource/v2/video/media/transfer?Authorization=${authorization}&templateCode=${templateCode}&resourceUrl=${resourceUrl}` + lastParam;
+  return ip + `/staticResource/v2/video/media/transfer?Authorization=${authorization}&resourceUrl=${resourceUrl}` + lastParam;
 }
 /**
  * 客户端插件访问入口

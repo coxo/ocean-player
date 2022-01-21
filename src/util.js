@@ -531,7 +531,7 @@ export function serverDecoding(player){
   // 从file中提取 Authorization
   const authorization = getQueryString(file, 'Authorization')
   const templateCode = findVideoAttribute(resolution,'templateCode')
-  let lastParam = ''
+  let lastParam = `&templateCode=${templateCode}`
 
   // 原始码流
   if(templateCode == 10000){
@@ -540,7 +540,7 @@ export function serverDecoding(player){
   }
 
   const resourceUrl = BASE64.encode(file)?.replaceAll('=','')?.replaceAll('/','_')?.replaceAll('+','-')
-  return ip + `/staticResource/v2/video/media/transfer?Authorization=${authorization}&templateCode=${templateCode}&resourceUrl=${resourceUrl}` + lastParam
+  return ip + `/staticResource/v2/video/media/transfer?Authorization=${authorization}&resourceUrl=${resourceUrl}` + lastParam
 }
 
 /**
